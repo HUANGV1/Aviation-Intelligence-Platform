@@ -33,6 +33,31 @@ export type DocumentListResponse = {
   total: number;
 };
 
+export type DocumentChunk = {
+  id: string;
+  document_id: string;
+  chunk_index: number;
+  text: string;
+  page_number: number | null;
+  section_title: string | null;
+  token_count: number;
+  created_at: string;
+};
+
+export type ChunkListResponse = {
+  document_id: string;
+  chunks: DocumentChunk[];
+  total: number;
+};
+
+export type ProcessDocumentResponse = {
+  document_id: string;
+  status: string;
+  page_count: number;
+  chunk_count: number;
+  message: string;
+};
+
 export function getApiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 }
@@ -131,10 +156,6 @@ export async function uploadDocument(file: File): Promise<{
   }
 }
 
-export function getDocumentFileUrl(documentId: string): string {
-  return `${getApiUrl()}/documents/${documentId}/file`;
-}
-
 export async function deleteDocument(documentId: string): Promise<{
   error: string | null;
 }> {
@@ -164,6 +185,70 @@ export async function deleteDocument(documentId: string): Promise<{
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return { error: message };
+  }
+}
+
+export function getDocumentFileUrl(documentId: string): string {
+  return `${getApiUrl()}/documents/${documentId}/file`;
+}
+
+export async function processDocument(documentId: string): Promise<{
+  data: ProcessDocumentResponse | null;
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/documents/${documentId}/process`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      let errorMessage = `Processing failed (status ${response.status})`;
+
+      try {
+        const payload = (await response.json()) as { detail?: unknown };
+        if (typeof payload.detail === "string") {
+          errorMessage = payload.detail;
+        }
+      } catch {
+        // Keep the default error message.
+      }
+
+      return { data: null, error: errorMessage };
+    }
+
+    const data = (await response.json()) as ProcessDocumentResponse;
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { data: null, error: message };
+  }
+}
+
+export async function fetchDocumentChunks(documentId: string): Promise<{
+  data: ChunkListResponse | null;
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/documents/${documentId}/chunks`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: `Failed to load chunks (status ${response.status})`,
+      };
+    }
+
+    const data = (await response.json()) as ChunkListResponse;
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { data: null, error: message };
   }
 }
 

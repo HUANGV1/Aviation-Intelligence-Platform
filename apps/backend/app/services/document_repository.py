@@ -184,3 +184,77 @@ def delete_document(document_id: UUID) -> DocumentResponse | None:
             return _row_to_document(row)
     except SQLAlchemyError as exc:
         raise RuntimeError("Failed to delete document.") from exc
+
+
+def update_document_status(document_id: UUID, status: str) -> DocumentResponse | None:
+    query = text(
+        """
+        UPDATE documents
+        SET status = :status
+        WHERE id = :document_id
+        RETURNING
+            id,
+            filename,
+            original_filename,
+            source_type,
+            acquisition_mode,
+            status,
+            file_path,
+            page_count,
+            source_url,
+            uploaded_at,
+            retrieved_at,
+            created_at,
+            updated_at
+        """
+    )
+
+    try:
+        with get_engine().connect() as connection:
+            row = connection.execute(
+                query,
+                {"document_id": document_id, "status": status},
+            ).one_or_none()
+            connection.commit()
+            if row is None:
+                return None
+            return _row_to_document(row)
+    except SQLAlchemyError as exc:
+        raise RuntimeError("Failed to update document status.") from exc
+
+
+def update_document_page_count(document_id: UUID, page_count: int) -> DocumentResponse | None:
+    query = text(
+        """
+        UPDATE documents
+        SET page_count = :page_count
+        WHERE id = :document_id
+        RETURNING
+            id,
+            filename,
+            original_filename,
+            source_type,
+            acquisition_mode,
+            status,
+            file_path,
+            page_count,
+            source_url,
+            uploaded_at,
+            retrieved_at,
+            created_at,
+            updated_at
+        """
+    )
+
+    try:
+        with get_engine().connect() as connection:
+            row = connection.execute(
+                query,
+                {"document_id": document_id, "page_count": page_count},
+            ).one_or_none()
+            connection.commit()
+            if row is None:
+                return None
+            return _row_to_document(row)
+    except SQLAlchemyError as exc:
+        raise RuntimeError("Failed to update document page count.") from exc

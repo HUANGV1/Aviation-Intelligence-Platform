@@ -57,11 +57,20 @@ def main() -> None:
         for statement in statements:
             connection.execute(text(statement))
 
-        exists = connection.execute(
+        documents_exists = connection.execute(
             text("SELECT to_regclass('public.documents') IS NOT NULL")
         ).scalar()
+        chunks_exists = connection.execute(
+            text("SELECT to_regclass('public.document_chunks') IS NOT NULL")
+        ).scalar()
 
-    print("migration ok", "documents table exists:", bool(exists))
+    print(
+        "migration ok",
+        "documents table exists:",
+        bool(documents_exists),
+        "document_chunks table exists:",
+        bool(chunks_exists),
+    )
 
 
 if __name__ == "__main__":

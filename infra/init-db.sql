@@ -41,3 +41,21 @@ CREATE TRIGGER documents_updated_at
     BEFORE UPDATE ON documents
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+-- Phase 3: document_chunks table for extracted PDF text chunks
+CREATE TABLE IF NOT EXISTS document_chunks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    chunk_index INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    page_number INTEGER,
+    section_title TEXT,
+    token_count INTEGER NOT NULL,
+    embedding vector,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (document_id, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_document_chunks_document_id ON document_chunks (document_id);
+CREATE INDEX IF NOT EXISTS idx_document_chunks_document_id_chunk_index
+    ON document_chunks (document_id, chunk_index);
