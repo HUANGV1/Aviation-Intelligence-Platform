@@ -1,5 +1,11 @@
+# Purpose: Python package dependencies for the FastAPI backend.
+# Interactions: Install with `pip install -r requirements.txt` before running
+# uvicorn or pytest. Versions pin the API, database, upload, and test stack.
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 sqlalchemy==2.0.36
 psycopg[binary]==3.2.13
 pydantic-settings==2.7.0
+python-multipart==0.0.20
+httpx==0.28.1
+pytest==8.3.4

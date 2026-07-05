@@ -1,3 +1,8 @@
+/*
+ * Purpose: Global styles and design tokens for the Next.js frontend.
+ * Interactions: Imported by layout.tsx and applied to all pages/components
+ * (page.tsx, document-upload.tsx, document-library.tsx).
+ */
 :root {
   --background: #0b1220;
   --foreground: #e8eef7;
@@ -29,7 +34,7 @@ body {
 }
 
 main {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 3rem 1.5rem;
 }
@@ -113,4 +118,214 @@ pre {
   overflow-x: auto;
   font-size: 0.8125rem;
   color: var(--muted);
+}
+
+.page-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.compact-card {
+  padding: 1.25rem 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+}
+
+.helper-text {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+.success-text {
+  margin-top: 1rem;
+  color: var(--success);
+  font-size: 0.875rem;
+}
+
+.meta-text {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.upload-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.file-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: #0a0f1a;
+  color: var(--foreground);
+}
+
+.file-input::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.625rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button.primary {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: var(--accent);
+}
+
+.button.secondary {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: var(--border);
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.button.danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: var(--error);
+}
+
+.document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.document-item.selected {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.2);
+}
+
+.pdf-viewer-panel {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0a0f1a;
+}
+
+.pdf-viewer-item {
+  list-style: none;
+}
+
+.pdf-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pdf-viewer-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.pdf-viewer-frame {
+  width: 100%;
+  height: 70vh;
+  min-height: 420px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.empty-state {
+  padding: 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.document-list {
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.document-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0a0f1a;
+}
+
+.document-item-main h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.document-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .document-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .document-item-meta {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .pdf-viewer-header {
+    flex-direction: column;
+  }
+
+  .pdf-viewer-frame {
+    height: 55vh;
+    min-height: 320px;
+  }
 }

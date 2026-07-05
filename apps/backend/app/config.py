@@ -1,3 +1,10 @@
+"""Application settings loaded from environment variables.
+
+Purpose: Centralizes configuration (database URL, CORS, upload directory, size limits).
+Interactions: Reads apps/backend/.env and repo-root .env. Consumed by main.py,
+database.py, and document_storage.py. Values are documented in .env.example files.
+"""
+
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -19,6 +26,19 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     backend_host: str = "0.0.0.0"
     backend_port: int = 8000
+    upload_dir: str = "uploads"
+    max_upload_mb: int = 50
+
+    @property
+    def upload_path(self) -> Path:
+        path = Path(self.upload_dir)
+        if not path.is_absolute():
+            path = ROOT_DIR / path
+        return path
+
+    @property
+    def max_upload_bytes(self) -> int:
+        return self.max_upload_mb * 1024 * 1024
 
     @property
     def cors_origin_list(self) -> list[str]:
@@ -29,9 +49,7 @@ class Settings(BaseSettings):
         if not self.database_url:
             raise ValueError(
                 "DATABASE_URL is required. Set it in apps/backend/.env with no syntax errors. "
-                "If uvicorn logs 'python-dotenv could not parse statement', fix line formatting "
-                "in that file (no DATABASE_URL= prefix inside the value, matching quotes, "
-                "URL-encode # as %23). See docs/SUPABASE_SETUP.md."
+                "See docs/SUPABASE_SETUP.md."
             )
 
         url = self.database_url.strip().strip('"').strip("'")

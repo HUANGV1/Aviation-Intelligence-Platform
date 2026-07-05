@@ -1,37 +1,11 @@
-type HealthResponse = {
-  status: string;
-  service: string;
-  database: {
-    connected: boolean;
-    error: string | null;
-  };
-};
-
-async function fetchHealth(): Promise<{
-  data: HealthResponse | null;
-  error: string | null;
-}> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
-  try {
-    const response = await fetch(`${apiUrl}/health`, {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return {
-        data: null,
-        error: `Backend responded with status ${response.status}`,
-      };
-    }
-
-    const data = (await response.json()) as HealthResponse;
-    return { data, error: null };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return { data: null, error: message };
-  }
-}
+/**
+ * Purpose: Main dashboard page — system health, PDF upload, and document library.
+ * Interactions: Server component that fetches data via lib/api.ts and renders
+ * DocumentUpload (client) and DocumentLibrary. Entry point at http://localhost:3000.
+ */
+import { DocumentLibrary } from "@/components/document-library";
+import { DocumentUpload } from "@/components/document-upload";
+import { fetchDocuments, fetchHealth } from "@/lib/api";
 
 function StatusBadge({ status }: { status: string }) {
   const normalized = status.toLowerCase();
@@ -46,51 +20,60 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default async function HomePage() {
-  const { data, error } = await fetchHealth();
+  const [{ data: health, error: healthError }, { data: documents, error: documentsError }] =
+    await Promise.all([fetchHealth(), fetchDocuments()]);
 
   return (
     <main>
       <h1>Aviation Intelligence Platform</h1>
       <p className="subtitle">
-        Phase 1 foundation — frontend connected to backend health check.
+        Upload aviation PDFs and manage your document library.
       </p>
 
-      <section className="card">
-        <h2>System Status</h2>
+      <div className="page-grid">
+        <section className="card compact-card">
+          <h2>System Status</h2>
 
-        {error && (
-          <p className="error-text">
-            Could not reach backend: {error}
+          {healthError && (
+            <p className="error-text">Could not reach backend: {healthError}</p>
+          )}
+
+          {health && (
+            <>
+              <div className="status-row">
+                <span className="label">Backend</span>
+                <StatusBadge status={health.status} />
+              </div>
+              <div className="status-row">
+                <span className="label">Database</span>
+                <StatusBadge
+                  status={health.database.connected ? "healthy" : "degraded"}
+                />
+              </div>
+              {health.database.error && (
+                <p className="error-text">{health.database.error}</p>
+              )}
+            </>
+          )}
+
+          {!health && !healthError && <StatusBadge status="loading" />}
+        </section>
+
+        <section className="card">
+          <h2>Upload Document</h2>
+          <p className="helper-text">
+            PDF only. Files are stored locally and indexed in Supabase metadata.
           </p>
-        )}
+          <DocumentUpload />
+        </section>
 
-        {data && (
-          <>
-            <div className="status-row">
-              <span className="label">Backend</span>
-              <StatusBadge status={data.status} />
-            </div>
-            <div className="status-row">
-              <span className="label">Service</span>
-              <span>{data.service}</span>
-            </div>
-            <div className="status-row">
-              <span className="label">Database</span>
-              <StatusBadge
-                status={data.database.connected ? "healthy" : "degraded"}
-              />
-            </div>
-            {data.database.error && (
-              <p className="error-text">{data.database.error}</p>
-            )}
-            <pre>{JSON.stringify(data, null, 2)}</pre>
-          </>
-        )}
-
-        {!data && !error && (
-          <StatusBadge status="loading" />
-        )}
-      </section>
+        <section className="card">
+          <DocumentLibrary
+            documents={documents?.documents ?? []}
+            error={documentsError}
+          />
+        </section>
+      </div>
     </main>
   );
 }

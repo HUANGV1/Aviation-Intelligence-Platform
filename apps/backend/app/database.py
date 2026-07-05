@@ -1,3 +1,10 @@
+"""SQLAlchemy database engine and connectivity helpers.
+
+Purpose: Provides a shared Postgres engine and verifies DB/pgvector availability.
+Interactions: Uses DATABASE_URL from config.py. Used by document_repository.py,
+scripts/apply_init_db.py, and the /health endpoint in main.py.
+"""
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError

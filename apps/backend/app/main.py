@@ -1,6 +1,16 @@
+"""FastAPI application entry point.
+
+Purpose: Creates the API app, configures CORS, mounts route modules, and exposes
+the /health endpoint for connectivity checks.
+Interactions: Started by uvicorn (see README). Imports settings from config.py,
+the documents router from api/documents.py, and database checks from database.py.
+Called by the frontend via lib/api.ts and exercised by tests/test_documents.py.
+"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.documents import router as documents_router
 from app.config import settings
 from app.database import check_database_connection
 
@@ -17,6 +27,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(documents_router)
 
 
 @app.get("/health")
