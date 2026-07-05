@@ -1,5 +1,7 @@
 """Unit tests for page-aware recursive text chunking."""
 
+import pytest
+
 from app.services.chunking import (
     DEFAULT_CHUNK_WORDS,
     DEFAULT_OVERLAP_WORDS,
@@ -64,6 +66,16 @@ def test_chunk_pages_applies_overlap() -> None:
     assert first_tail == second_head
 
 
+def test_chunk_pages_keeps_overlapped_chunks_within_limit() -> None:
+    words = ["token"] * 2400
+    pages = [PageText(page_number=4, text=" ".join(words))]
+
+    chunks = chunk_pages(pages, chunk_words=800, overlap_words=120)
+
+    assert len(chunks) >= 3
+    assert all(chunk.token_count <= 800 for chunk in chunks)
+
+
 def test_chunk_pages_long_unbroken_text_falls_back_to_word_split() -> None:
     text = " ".join(["run"] * 900)
     pages = [PageText(page_number=5, text=text)]
@@ -105,3 +117,21 @@ def test_chunk_pages_default_parameters() -> None:
     assert len(chunks) == 1
     assert chunks[0].token_count <= DEFAULT_CHUNK_WORDS
     assert DEFAULT_OVERLAP_WORDS == 120
+
+
+@pytest.mark.parametrize(
+    ("chunk_words", "overlap_words"),
+    [
+        (0, 0),
+        (100, -1),
+        (100, 100),
+        (100, 120),
+    ],
+)
+def test_chunk_pages_rejects_invalid_size_parameters(
+    chunk_words: int, overlap_words: int
+) -> None:
+    page = PageText(page_number=1, text="Short aviation briefing.")
+
+    with pytest.raises(ValueError):
+        chunk_pages([page], chunk_words=chunk_words, overlap_words=overlap_words)

@@ -196,14 +196,22 @@ def chunk_pages(
     chunk_words: int = DEFAULT_CHUNK_WORDS,
     overlap_words: int = DEFAULT_OVERLAP_WORDS,
 ) -> list[TextChunk]:
+    if chunk_words <= 0:
+        raise ValueError("chunk_words must be greater than 0.")
+    if overlap_words < 0:
+        raise ValueError("overlap_words must be greater than or equal to 0.")
+    if overlap_words >= chunk_words:
+        raise ValueError("overlap_words must be less than chunk_words.")
+
     all_chunks: list[TextChunk] = []
     next_index = 0
+    target_segment_words = chunk_words - overlap_words if overlap_words > 0 else chunk_words
 
     for page in pages:
         section_title = _detect_section_title(page.text)
         page_chunks, next_index = _chunk_page_text(
             page,
-            chunk_words=chunk_words,
+            chunk_words=target_segment_words,
             overlap_words=overlap_words,
             start_index=next_index,
             section_title=section_title,

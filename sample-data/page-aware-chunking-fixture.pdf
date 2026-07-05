@@ -1,0 +1,156 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R] /Count 4 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 480 >>
+stream
+BT
+/F1 12 Tf
+72 740 Td
+16 TL
+(PAGE 1 - AIRCRAFT MAINTENANCE OVERVIEW) Tj
+T*
+(Document: Page-aware chunking fixture) Tj
+T*
+(Section 1.0 Purpose) Tj
+T*
+(This page introduces aircraft dispatch review.) Tj
+T*
+(BOUNDARY_TOKEN_ALPHA appears only on page 1.) Tj
+T*
+(Checklist items:) Tj
+T*
+(1. Verify airframe identifier N123AI.) Tj
+T*
+(2. Confirm maintenance release signature.) Tj
+T*
+(3. Record fuel sample inspection result.) Tj
+T*
+(Bottom marker: page 1 should stay page 1.) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 493 >>
+stream
+BT
+/F1 12 Tf
+72 740 Td
+16 TL
+(PAGE 2 - AIRCRAFT MAINTENANCE OVERVIEW) Tj
+T*
+(Top marker: page 2 follows page 1.) Tj
+T*
+(Section 2.0 Findings) Tj
+T*
+(Finding A: hydraulic pressure stabilized.) Tj
+T*
+(Finding B: avionics cooling fan passed.) Tj
+T*
+(BOUNDARY_TOKEN_BRAVO appears only on page 2.) Tj
+T*
+(Repeated heading: Corrective Actions) Tj
+T*
+(Action 1: replace worn cargo door placard.) Tj
+T*
+(Action 2: update the tracking record.) Tj
+T*
+(Bottom marker: page 2 ends before page 3.) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 496 >>
+stream
+BT
+/F1 12 Tf
+72 740 Td
+16 TL
+(PAGE 3 - FLIGHT OPERATIONS BULLETIN) Tj
+T*
+(Section 3.0 Operational Notes) Tj
+T*
+(This page changes topic to dispatch limits.) Tj
+T*
+(BOUNDARY_TOKEN_CHARLIE appears only on page 3.) Tj
+T*
+(Repeated heading: Corrective Actions) Tj
+T*
+(Action 3: brief alternate fuel requirements.) Tj
+T*
+(Action 4: confirm NOTAM review.) Tj
+T*
+(Table-like rows:) Tj
+T*
+(Airport KSEA | Ceiling 900 ft | Visibility 5 SM) Tj
+T*
+(Airport KPDX | Ceiling 1500 ft | Visibility 8 SM) Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 348 >>
+stream
+BT
+/F1 12 Tf
+72 740 Td
+16 TL
+(PAGE 4 - SIGNOFF AND TRACEABILITY) Tj
+T*
+(Section 4.0 Approval) Tj
+T*
+(This short page tests small trailing chunks.) Tj
+T*
+(BOUNDARY_TOKEN_DELTA appears only on page 4.) Tj
+T*
+(Approver: Quality Control Lead) Tj
+T*
+(Timestamp: 2026-07-05T17:00:00-04:00) Tj
+T*
+(Final marker: this text belongs to page 4 only.) Tj
+T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000139 00000 n 
+0000000266 00000 n 
+0000000797 00000 n 
+0000000924 00000 n 
+0000001468 00000 n 
+0000001595 00000 n 
+0000002142 00000 n 
+0000002270 00000 n 
+0000002670 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+2739
+%%EOF
