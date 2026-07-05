@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     page_number INTEGER,
     section_title TEXT,
     token_count INTEGER NOT NULL,
-    embedding vector,
+    embedding vector(768),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (document_id, chunk_index)
 );
@@ -59,3 +59,28 @@ CREATE TABLE IF NOT EXISTS document_chunks (
 CREATE INDEX IF NOT EXISTS idx_document_chunks_document_id ON document_chunks (document_id);
 CREATE INDEX IF NOT EXISTS idx_document_chunks_document_id_chunk_index
     ON document_chunks (document_id, chunk_index);
+
+-- Phase 4: fixed-dimension embeddings and cosine HNSW index for semantic search
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'document_chunks'
+          AND column_name = 'embedding'
+          AND udt_name = 'vector'
+    ) THEN
+        ALTER TABLE document_chunks
+            ALTER COLUMN embedding TYPE vector(768)
+            USING CASE
+                WHEN embedding IS NULL THEN NULL
+                ELSE embedding::vector(768)
+            END;
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_document_chunks_embedding_hnsw
+    ON document_chunks
+    USING hnsw (embedding vector_cosine_ops)
+    WHERE embedding IS NOT NULL;

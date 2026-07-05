@@ -29,6 +29,16 @@ class Settings(BaseSettings):
     upload_dir: str = "uploads"
     max_upload_mb: int = 50
 
+    embedding_provider: str = "gemini"
+    embedding_model: str = "gemini-embedding-2"
+    embedding_dimensions: int = 768
+    gemini_api_key: str = ""
+    embedding_batch_size: int = 4
+    embedding_request_token_budget: int = 6000
+    embedding_tokens_per_minute: int = 25000
+    search_default_top_k: int = 8
+    search_max_top_k: int = 10
+
     @property
     def upload_path(self) -> Path:
         path = Path(self.upload_dir)

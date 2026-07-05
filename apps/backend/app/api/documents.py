@@ -19,12 +19,17 @@ from app.schemas.document import (
     DocumentResponse,
 )
 from app.services.chunk_repository import list_chunks_for_document
-from app.services.document_processing import DocumentProcessingError, process_document
+from app.services.document_processing import (
+    DocumentProcessingCancelled,
+    DocumentProcessingError,
+    process_document,
+)
 from app.services.document_repository import (
     create_document,
     delete_document,
     get_document,
     list_documents,
+    update_document_status,
 )
 from app.services.document_storage import (
     delete_local_pdf,
@@ -95,6 +100,11 @@ def get_document_file(document_id: UUID) -> FileResponse:
 def process_document_by_id(document_id: UUID) -> ProcessDocumentResponse:
     try:
         page_count, chunk_count = process_document(document_id)
+    except DocumentProcessingCancelled as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
     except DocumentProcessingError as exc:
         message = str(exc)
         status_code = (
@@ -115,6 +125,45 @@ def process_document_by_id(document_id: UUID) -> ProcessDocumentResponse:
         page_count=page_count,
         chunk_count=chunk_count,
     )
+
+
+@router.post("/{document_id}/cancel", response_model=DocumentResponse)
+def cancel_document_processing(document_id: UUID) -> DocumentResponse:
+    try:
+        document = get_document(document_id)
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        ) from exc
+
+    if document is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    if document.status != "processing":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only processing documents can be cancelled.",
+        )
+
+    try:
+        cancelled = update_document_status(document_id, "cancelled")
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        ) from exc
+
+    if cancelled is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    return cancelled
 
 
 @router.get("/{document_id}/chunks", response_model=ChunkListResponse)

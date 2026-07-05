@@ -1,18 +1,23 @@
 /**
  * Purpose: Client-side PDF upload form with validation and status feedback.
- * Interactions: Used by page.tsx. Calls uploadDocument() in lib/api.ts, then
- * router.refresh() so the server-rendered DocumentLibrary reloads.
+ * Interactions: Used by document-dashboard.tsx. Calls uploadDocument() in
+ * lib/api.ts, then reports the uploaded document to the shared dashboard state.
  */
 "use client";
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import type { Document } from "@/lib/api";
 import { uploadDocument } from "@/lib/api";
 
 type UploadState = "idle" | "uploading" | "success" | "error";
 
-export function DocumentUpload() {
+type DocumentUploadProps = {
+  onUploaded?: (document: Document) => void;
+};
+
+export function DocumentUpload({ onUploaded }: DocumentUploadProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -55,6 +60,7 @@ export function DocumentUpload() {
     setUploadState("success");
     setMessage(`Uploaded "${data.original_filename}".`);
     setSelectedFile(null);
+    onUploaded?.(data);
 
     if (inputRef.current) {
       inputRef.current.value = "";

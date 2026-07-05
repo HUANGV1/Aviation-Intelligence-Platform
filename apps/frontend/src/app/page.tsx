@@ -1,10 +1,9 @@
 /**
- * Purpose: Main dashboard page — system health, PDF upload, and document library.
+ * Purpose: Main dashboard page — system health, PDF upload, library, and search.
  * Interactions: Server component that fetches data via lib/api.ts and renders
- * DocumentUpload (client) and DocumentLibrary. Entry point at http://localhost:3000.
+ * DocumentDashboard for client-side document interactions.
  */
-import { DocumentLibrary } from "@/components/document-library";
-import { DocumentUpload } from "@/components/document-upload";
+import { DocumentDashboard } from "@/components/document-dashboard";
 import { fetchDocuments, fetchHealth } from "@/lib/api";
 
 function StatusBadge({ status }: { status: string }) {
@@ -59,20 +58,10 @@ export default async function HomePage() {
           {!health && !healthError && <StatusBadge status="loading" />}
         </section>
 
-        <section className="card">
-          <h2>Upload Document</h2>
-          <p className="helper-text">
-            PDF only. Files are stored locally and indexed in Supabase metadata.
-          </p>
-          <DocumentUpload />
-        </section>
-
-        <section className="card">
-          <DocumentLibrary
-            documents={documents?.documents ?? []}
-            error={documentsError}
-          />
-        </section>
+        <DocumentDashboard
+          initialDocuments={documents?.documents ?? []}
+          documentsError={documentsError}
+        />
       </div>
     </main>
   );

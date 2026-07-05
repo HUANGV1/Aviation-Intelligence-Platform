@@ -15,6 +15,8 @@ from pypdf.errors import PdfReadError
 
 logger = logging.getLogger(__name__)
 
+_ALLOWED_CONTROL_CHARS = {"\n", "\r", "\t"}
+
 
 class PdfExtractionError(Exception):
     """Raised when a PDF cannot be parsed or has no extractable text."""
@@ -33,7 +35,12 @@ class ExtractionResult:
 
 
 def _normalize_text(raw_text: str) -> str:
-    return " ".join((raw_text or "").split())
+    cleaned = "".join(
+        char
+        for char in (raw_text or "")
+        if char >= " " or char in _ALLOWED_CONTROL_CHARS
+    )
+    return " ".join(cleaned.split())
 
 
 def _extract_with_pypdf(file_path: Path) -> ExtractionResult:

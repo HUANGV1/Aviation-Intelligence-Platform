@@ -58,6 +58,23 @@ export type ProcessDocumentResponse = {
   message: string;
 };
 
+export type SearchResult = {
+  chunk_id: string;
+  document_id: string;
+  document_name: string;
+  chunk_index: number;
+  text: string;
+  page_number: number | null;
+  section_title: string | null;
+  similarity: number;
+};
+
+export type SearchResponse = {
+  query: string;
+  results: SearchResult[];
+  total: number;
+};
+
 export function getApiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 }
@@ -192,7 +209,10 @@ export function getDocumentFileUrl(documentId: string): string {
   return `${getApiUrl()}/documents/${documentId}/file`;
 }
 
-export async function processDocument(documentId: string): Promise<{
+export async function processDocument(
+  documentId: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<{
   data: ProcessDocumentResponse | null;
   error: string | null;
 }> {
@@ -201,6 +221,7 @@ export async function processDocument(documentId: string): Promise<{
   try {
     const response = await fetch(`${apiUrl}/documents/${documentId}/process`, {
       method: "POST",
+      signal: options.signal,
     });
 
     if (!response.ok) {
@@ -219,6 +240,44 @@ export async function processDocument(documentId: string): Promise<{
     }
 
     const data = (await response.json()) as ProcessDocumentResponse;
+    return { data, error: null };
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      return { data: null, error: "Processing cancelled." };
+    }
+
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { data: null, error: message };
+  }
+}
+
+export async function cancelDocumentProcessing(documentId: string): Promise<{
+  data: Document | null;
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/documents/${documentId}/cancel`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      let errorMessage = `Cancel failed (status ${response.status})`;
+
+      try {
+        const payload = (await response.json()) as { detail?: unknown };
+        if (typeof payload.detail === "string") {
+          errorMessage = payload.detail;
+        }
+      } catch {
+        // Keep the default error message.
+      }
+
+      return { data: null, error: errorMessage };
+    }
+
+    const data = (await response.json()) as Document;
     return { data, error: null };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
@@ -245,6 +304,48 @@ export async function fetchDocumentChunks(documentId: string): Promise<{
     }
 
     const data = (await response.json()) as ChunkListResponse;
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { data: null, error: message };
+  }
+}
+
+export async function searchChunks(payload: {
+  query: string;
+  document_id?: string;
+  top_k?: number;
+}): Promise<{
+  data: SearchResponse | null;
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/rag/search`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      let errorMessage = `Search failed (status ${response.status})`;
+
+      try {
+        const body = (await response.json()) as { detail?: unknown };
+        if (typeof body.detail === "string") {
+          errorMessage = body.detail;
+        }
+      } catch {
+        // Keep the default error message.
+      }
+
+      return { data: null, error: errorMessage };
+    }
+
+    const data = (await response.json()) as SearchResponse;
     return { data, error: null };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

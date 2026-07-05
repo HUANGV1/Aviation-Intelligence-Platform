@@ -5,10 +5,12 @@
  */
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import type { Document, DocumentChunk } from "@/lib/api";
 import {
+  cancelDocumentProcessing,
   deleteDocument,
   fetchDocumentChunks,
   formatTimestamp,
@@ -19,6 +21,7 @@ import {
 type DocumentLibraryProps = {
   documents: Document[];
   error: string | null;
+  onDocumentsChange: Dispatch<SetStateAction<Document[]>>;
 };
 
 type SelectedDocument = {
@@ -42,26 +45,31 @@ function StatusBadge({ status }: { status: string }) {
 
 function canProcess(status: string): boolean {
   const normalized = status.toLowerCase();
-  return normalized === "uploaded" || normalized === "failed";
+  return (
+    normalized === "uploaded" ||
+    normalized === "failed" ||
+    normalized === "cancelled"
+  );
 }
 
-export function DocumentLibrary({ documents, error }: DocumentLibraryProps) {
-  const [libraryDocuments, setLibraryDocuments] = useState(documents);
+export function DocumentLibrary({
+  documents,
+  error,
+  onDocumentsChange,
+}: DocumentLibraryProps) {
   const [selected, setSelected] = useState<SelectedDocument | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [inspectingId, setInspectingId] = useState<string | null>(null);
   const [chunksPreview, setChunksPreview] = useState<DocumentChunk[]>([]);
   const [chunksTotal, setChunksTotal] = useState(0);
   const [actionError, setActionError] = useState<string | null>(null);
-  const documentCount = libraryDocuments.length;
-
-  useEffect(() => {
-    setLibraryDocuments(documents);
-  }, [documents]);
+  const processControllerRef = useRef<AbortController | null>(null);
+  const documentCount = documents.length;
 
   function updateDocumentInList(updated: Partial<Document> & { id: string }) {
-    setLibraryDocuments((current) =>
+    onDocumentsChange((current) =>
       current.map((item) =>
         item.id === updated.id ? { ...item, ...updated } : item,
       ),
@@ -97,22 +105,36 @@ export function DocumentLibrary({ documents, error }: DocumentLibraryProps) {
       setChunksTotal(0);
     }
 
-    setLibraryDocuments((current) =>
+    onDocumentsChange((current) =>
       current.filter((item) => item.id !== document.id),
     );
   }
 
   async function handleProcess(document: Document) {
+    const controller = new AbortController();
     setActionError(null);
     setProcessingId(document.id);
+    setCancellingId(null);
+    processControllerRef.current = controller;
     updateDocumentInList({ id: document.id, status: "processing" });
 
-    const { data, error: processError } = await processDocument(document.id);
+    const { data, error: processError } = await processDocument(document.id, {
+      signal: controller.signal,
+    });
 
     setProcessingId(null);
+    if (processControllerRef.current === controller) {
+      processControllerRef.current = null;
+    }
 
     if (processError || !data) {
-      updateDocumentInList({ id: document.id, status: "failed" });
+      updateDocumentInList({
+        id: document.id,
+        status: controller.signal.aborted ? "cancelled" : "failed",
+      });
+      if (controller.signal.aborted) {
+        return;
+      }
       setActionError(processError ?? "Processing failed.");
       return;
     }
@@ -122,6 +144,24 @@ export function DocumentLibrary({ documents, error }: DocumentLibraryProps) {
       status: data.status,
       page_count: data.page_count,
     });
+  }
+
+  async function handleCancelProcess(document: Document) {
+    setActionError(null);
+    setCancellingId(document.id);
+
+    const { data, error: cancelError } = await cancelDocumentProcessing(
+      document.id,
+    );
+    processControllerRef.current?.abort();
+    setCancellingId(null);
+
+    if (cancelError || !data) {
+      setActionError(cancelError ?? "Could not cancel processing.");
+      return;
+    }
+
+    updateDocumentInList(data);
   }
 
   async function handleInspectChunks(document: Document) {
@@ -152,7 +192,7 @@ export function DocumentLibrary({ documents, error }: DocumentLibraryProps) {
     );
   }
 
-  if (libraryDocuments.length === 0) {
+  if (documents.length === 0) {
     return (
       <>
         <div className="section-header">
@@ -181,7 +221,7 @@ export function DocumentLibrary({ documents, error }: DocumentLibraryProps) {
       {actionError && <p className="error-text">{actionError}</p>}
 
       <ul className="document-list">
-        {libraryDocuments.map((document) => (
+        {documents.map((document) => (
           <Fragment key={document.id}>
             <li
               className={`document-item${selected?.id === document.id ? " selected" : ""}`}
@@ -208,6 +248,18 @@ export function DocumentLibrary({ documents, error }: DocumentLibraryProps) {
                       onClick={() => handleProcess(document)}
                     >
                       {processingId === document.id ? "Processing..." : "Process"}
+                    </button>
+                  )}
+                  {document.status === "processing" && (
+                    <button
+                      type="button"
+                      className="button danger"
+                      disabled={cancellingId === document.id}
+                      onClick={() => handleCancelProcess(document)}
+                    >
+                      {cancellingId === document.id
+                        ? "Cancelling..."
+                        : "Cancel process"}
                     </button>
                   )}
                   {document.status === "processed" && (
