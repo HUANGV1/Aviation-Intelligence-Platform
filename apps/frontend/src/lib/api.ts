@@ -3,6 +3,7 @@
  * Interactions: Used by page.tsx and document-upload.tsx. Calls /health,
  * /documents, and /documents/upload using NEXT_PUBLIC_API_URL from .env.local.
  */
+import type { ChatCitation } from "@/lib/chat-types";
 export type HealthResponse = {
   status: string;
   service: string;
@@ -421,4 +422,22 @@ export function formatTimestamp(value: string): string {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+export function toChatCitation(citation: RagCitation): ChatCitation {
+  return {
+    id: citation.chunk_id,
+    documentId: citation.document_id,
+    documentName: citation.document_name,
+    pageNumber: citation.page_number,
+    snippet: citation.text,
+    score: citation.similarity,
+    sourceId: citation.source_id,
+  };
+}
+
+export function resolveDocumentScope(
+  selectedDocumentId: string | null,
+): { document_id?: string } {
+  return selectedDocumentId ? { document_id: selectedDocumentId } : {};
 }
