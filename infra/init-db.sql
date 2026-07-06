@@ -84,3 +84,16 @@ CREATE INDEX IF NOT EXISTS idx_document_chunks_embedding_hnsw
     ON document_chunks
     USING hnsw (embedding vector_cosine_ops)
     WHERE embedding IS NOT NULL;
+
+-- Phase 5: rag_queries table for cited answer audit/history
+CREATE TABLE IF NOT EXISTS rag_queries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    query TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    document_id UUID REFERENCES documents(id) ON DELETE SET NULL,
+    retrieved_chunk_ids UUID[] NOT NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rag_queries_created_at ON rag_queries (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_rag_queries_document_id ON rag_queries (document_id);

@@ -7,9 +7,9 @@
 
 import { useEffect, useState } from "react";
 
+import { CitedAnswer } from "@/components/cited-answer";
 import { DocumentLibrary } from "@/components/document-library";
 import { DocumentUpload } from "@/components/document-upload";
-import { SemanticSearch } from "@/components/semantic-search";
 import type { Document } from "@/lib/api";
 
 type DocumentDashboardProps = {
@@ -53,7 +53,7 @@ export function DocumentDashboard({
       </section>
 
       <section className="card">
-        <SemanticSearch documents={documents} />
+        <CitedAnswer documents={documents} />
       </section>
     </>
   );

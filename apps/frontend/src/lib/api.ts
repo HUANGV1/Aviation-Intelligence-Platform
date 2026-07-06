@@ -75,6 +75,26 @@ export type SearchResponse = {
   total: number;
 };
 
+export type RagCitation = {
+  source_id: string;
+  chunk_id: string;
+  document_id: string;
+  document_name: string;
+  chunk_index: number;
+  text: string;
+  page_number: number | null;
+  section_title: string | null;
+  similarity: number;
+};
+
+export type RagQueryResponse = {
+  query: string;
+  answer: string;
+  citations: RagCitation[];
+  insufficient_evidence: boolean;
+  used_chunk_count: number;
+};
+
 export function getApiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 }
@@ -346,6 +366,48 @@ export async function searchChunks(payload: {
     }
 
     const data = (await response.json()) as SearchResponse;
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { data: null, error: message };
+  }
+}
+
+export async function queryRag(payload: {
+  query: string;
+  document_id?: string;
+  top_k?: number;
+}): Promise<{
+  data: RagQueryResponse | null;
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/rag/query`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      let errorMessage = `Answer request failed (status ${response.status})`;
+
+      try {
+        const body = (await response.json()) as { detail?: unknown };
+        if (typeof body.detail === "string") {
+          errorMessage = body.detail;
+        }
+      } catch {
+        // Keep the default error message.
+      }
+
+      return { data: null, error: errorMessage };
+    }
+
+    const data = (await response.json()) as RagQueryResponse;
     return { data, error: null };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

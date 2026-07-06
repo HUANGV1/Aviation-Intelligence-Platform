@@ -1,8 +1,9 @@
 """Application settings loaded from environment variables.
 
 Purpose: Centralizes configuration (database URL, CORS, upload directory, size limits).
-Interactions: Reads apps/backend/.env and repo-root .env. Consumed by main.py,
-database.py, and document_storage.py. Values are documented in .env.example files.
+Interactions: Reads repo-root .env as shared defaults and apps/backend/.env as
+backend-specific overrides. Consumed by main.py, database.py, and document_storage.py.
+Values are documented in .env.example files.
 """
 
 from pathlib import Path
@@ -15,7 +16,7 @@ ROOT_DIR = BACKEND_DIR.parent.parent
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=(BACKEND_DIR / ".env", ROOT_DIR / ".env"),
+        env_file=(ROOT_DIR / ".env", BACKEND_DIR / ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -38,6 +39,17 @@ class Settings(BaseSettings):
     embedding_tokens_per_minute: int = 25000
     search_default_top_k: int = 8
     search_max_top_k: int = 10
+
+    llm_provider: str = "gemini"
+    llm_model: str = "gemini-3.5-flash"
+    llm_temperature: float = 0.2
+    llm_max_output_tokens: int = 1200
+    llm_cache_enabled: bool = True
+    llm_cache_path: str = ".cache/llm_cache.json"
+    llm_cache_ttl_seconds: int = 21600
+    rag_min_similarity: float = 0.35
+    rag_answer_top_k: int = 6
+    rag_max_source_text_chars: int = 1800
 
     @property
     def upload_path(self) -> Path:

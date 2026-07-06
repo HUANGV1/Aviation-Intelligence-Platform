@@ -33,6 +33,7 @@ Thumbs.db
 # Local data
 postgres_data/
 uploads/
+.cache/
 
 # Logs
 *.log
