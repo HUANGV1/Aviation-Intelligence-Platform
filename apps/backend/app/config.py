@@ -51,6 +51,13 @@ class Settings(BaseSettings):
     rag_answer_top_k: int = 6
     rag_max_source_text_chars: int = 1800
 
+    agent_max_tool_rounds: int = 3
+    agent_temperature: float = 0.3
+    agent_max_output_tokens: int = 2048
+
+    aviation_weather_base_url: str = "https://aviationweather.gov"
+    operational_cache_ttl_seconds: int = 300
+
     @property
     def upload_path(self) -> Path:
         path = Path(self.upload_dir)

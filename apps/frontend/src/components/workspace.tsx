@@ -9,9 +9,11 @@ import { DocumentLibrary } from "@/components/document-library";
 import type { ChatMessage } from "@/lib/chat-types";
 import type { Document, HealthResponse } from "@/lib/api";
 import {
-  queryRag,
   resolveDocumentScope,
+  sendAgentMessage,
   toChatCitation,
+  toChatOperationalSource,
+  toChatToolActivity,
   uploadDocument,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -93,7 +95,7 @@ export function Workspace({
   }
 
   async function handleSend(text: string) {
-    if (busy || processedDocuments.length === 0) return;
+    if (busy) return;
 
     const userMsg: ChatMessage = {
       id: uid(),
@@ -114,8 +116,8 @@ export function Workspace({
     setMessages((prev) => [...prev, userMsg, pendingMsg]);
     setBusy(true);
 
-    const { data, error } = await queryRag({
-      query: text,
+    const { data, error } = await sendAgentMessage({
+      message: text,
       ...resolveDocumentScope(selectedScopeId),
     });
 
@@ -130,7 +132,7 @@ export function Workspace({
                 pending: false,
                 content:
                   error ??
-                  "The retrieval service is unavailable. Confirm the backend is running.",
+                  "The agent service is unavailable. Confirm the backend is running.",
               }
             : m,
         ),
@@ -146,7 +148,12 @@ export function Workspace({
               pending: false,
               content: data.answer,
               citations: data.citations.map(toChatCitation),
+              operationalSources: data.operational_sources.map(
+                toChatOperationalSource,
+              ),
               insufficientEvidence: data.insufficient_evidence,
+              toolActivities: data.tool_activities.map(toChatToolActivity),
+              directAnswer: data.direct_answer,
             }
           : m,
       ),
@@ -168,7 +175,7 @@ export function Workspace({
             <span className="mono-label">Library</span>
           </button>
           <span className="mono-label hidden text-muted-foreground sm:inline">
-            AVIATION INTELLIGENCE · RAG CONSOLE v0.1
+            AVIATION INTELLIGENCE · AGENT CONSOLE v0.2
           </span>
         </div>
         <div className="flex items-center gap-3">

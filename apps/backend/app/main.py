@@ -10,6 +10,7 @@ Called by the frontend via lib/api.ts and exercised by tests/test_documents.py.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.agent import router as agent_router
 from app.api.documents import router as documents_router
 from app.api.rag import router as rag_router
 from app.config import settings
@@ -17,8 +18,8 @@ from app.database import check_database_connection
 
 app = FastAPI(
     title="Aviation Intelligence Platform API",
-    version="0.1.0",
-    description="Backend API for the Aviation Intelligence AI Platform MVP.",
+    version="0.2.0",
+    description="Backend API for the Aviation Intelligence AI Platform agent and RAG services.",
 )
 
 app.add_middleware(
@@ -31,6 +32,7 @@ app.add_middleware(
 
 app.include_router(documents_router)
 app.include_router(rag_router)
+app.include_router(agent_router)
 
 
 @app.get("/health")

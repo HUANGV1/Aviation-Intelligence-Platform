@@ -1,13 +1,29 @@
 # Aviation Intelligence Platform
 
-Upload aviation PDFs, ask questions with cited answers, and explore your document library through a web console.
+Upload aviation PDFs, chat with an aviation intelligence agent, and get cited answers from your document library or direct agent responses.
 
 ## Features
 
+- **Agent chat** — one interface where the assistant decides whether to answer directly or use tools
+- **Document search tool** — cited answers from uploaded PDFs with source validation
+- **Live operational tools** — METAR, TAF, and international SIGMETs (AviationWeather.gov)
 - **Document library** — upload PDFs, process them for search, and manage your collection
-- **Cited Q&A** — ask questions scoped to one document or your full library; answers include source citations
-- **Semantic search** — vector search over document chunks powered by pgvector
+- **Legacy RAG APIs** — `/rag/query` and `/rag/search` remain available for compatibility
 - **Health monitoring** — frontend and API report backend and database connectivity
+
+## Architecture
+
+The platform is moving from a split-pane RAG console to an agent-first design:
+
+- Frontend chat shell calls `POST /agent/chat`
+- Backend agent orchestrator uses Gemini tool calling
+- `document_search` wraps the existing cited RAG pipeline
+- Operational aviation API tools register into the same tool layer with provenance metadata
+
+See:
+
+- [`docs/AGENT_ARCHITECTURE.md`](docs/AGENT_ARCHITECTURE.md)
+- [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md)
 
 ## Tech Stack
 
@@ -16,7 +32,7 @@ Upload aviation PDFs, ask questions with cited answers, and explore your documen
 | Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS |
 | Backend | FastAPI, Python 3.12+ |
 | Database | Supabase (PostgreSQL + pgvector) |
-| AI | Google Gemini (embeddings + answer generation) |
+| AI | Google Gemini (embeddings, agent turns, cited answers) |
 
 ## Prerequisites
 
@@ -72,15 +88,17 @@ npm run dev
 - API health: http://localhost:8000/health
 - API docs: http://localhost:8000/docs
 
-Upload a PDF from the document library, wait for processing to finish, then ask a question in the chat panel.
+Upload a PDF from the document library, process it, then ask the agent a question in the chat panel.
 
 ## Project Structure
 
 ```text
 apps/
-  frontend/       Next.js web app (document library + chat)
-  backend/        FastAPI API (uploads, processing, RAG)
+  frontend/       Next.js web app (agent chat + document library)
+  backend/        FastAPI API (agent, uploads, processing, RAG)
 docs/
+  AGENT_ARCHITECTURE.md
+  PROJECT_ROADMAP.md
   SUPABASE_SETUP.md
 infra/
   init-db.sql     Database schema (run in Supabase SQL Editor)
@@ -93,11 +111,12 @@ uploads/          Local PDF storage (created on first upload)
 | Endpoint | Description |
 |----------|-------------|
 | `GET /health` | Service and database health |
+| `POST /agent/chat` | Unified agent chat with tool routing |
 | `POST /documents/upload` | Upload a PDF |
 | `GET /documents` | List documents |
 | `POST /documents/{id}/process` | Extract text, chunk, and embed |
-| `POST /rag/query` | Ask a question with cited answer |
-| `POST /rag/search` | Semantic search over chunks |
+| `POST /rag/query` | Legacy cited RAG answer endpoint |
+| `POST /rag/search` | Legacy semantic search endpoint |
 
 Full request/response schemas are available at http://localhost:8000/docs when the backend is running.
 
@@ -117,6 +136,9 @@ Full request/response schemas are available at http://localhost:8000/docs when t
 | `EMBEDDING_*` | Embedding provider, model, and rate limits |
 | `LLM_*` | Answer generation model and cache settings |
 | `RAG_*` | Retrieval thresholds and source text limits |
+| `AGENT_*` | Agent tool loop and response settings |
+| `AVIATION_WEATHER_BASE_URL` | AviationWeather.gov API base URL |
+| `OPERATIONAL_CACHE_TTL_SECONDS` | Optional cache TTL for operational API responses |
 
 See [`apps/backend/.env.example`](apps/backend/.env.example) for all options and defaults.
 
@@ -126,6 +148,18 @@ See [`apps/backend/.env.example`](apps/backend/.env.example) for all options and
 |----------|-------------|
 | `NEXT_PUBLIC_API_URL` | Backend URL (default: `http://localhost:8000`) |
 
+## Operational Tools
+
+The agent can call these live-data tools (all server-side):
+
+| Tool | Provider | Purpose |
+|------|----------|---------|
+| `get_metar` | AviationWeather.gov | Current airport weather observations |
+| `get_taf` | AviationWeather.gov | Terminal aerodrome forecasts |
+| `get_international_sigmets` | AviationWeather.gov | International SIGMET hazard advisories |
+
+AviationWeather.gov tools are public and require no API key.
+
 ## Running Tests
 
 From `apps/backend` with the virtual environment activated:
@@ -134,4 +168,30 @@ From `apps/backend` with the virtual environment activated:
 pytest
 ```
 
+From `apps/frontend`:
+
+```bash
+npm run lint
+npm run build
+```
+
 Some tests require a configured database and API keys. See individual test modules for details.
+
+## Roadmap
+
+Implemented now:
+
+- Agent chat endpoint
+- `document_search` tool
+- Operational tools: `get_metar`, `get_taf`, `get_international_sigmets`
+- Tool activity and live operational source provenance in chat UI
+
+Planned next:
+
+- MCP adapter layer
+- Conversation memory
+- Hybrid retrieval and reranking
+- Observability dashboard
+- Evaluation pipeline
+
+See [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md) for details.

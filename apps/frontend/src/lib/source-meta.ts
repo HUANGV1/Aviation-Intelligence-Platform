@@ -2,7 +2,6 @@ export type SourceType =
   | "NTSB"
   | "FAA"
   | "WEATHER"
-  | "NOTAM"
   | "SOP"
   | "OTHER";
 
@@ -13,7 +12,6 @@ export const SOURCE_META: Record<
   NTSB: { label: "Accident Report", code: "NTSB", tone: "text-destructive" },
   FAA: { label: "FAA Advisory", code: "FAA", tone: "text-primary" },
   WEATHER: { label: "Weather / METAR", code: "WX", tone: "text-accent" },
-  NOTAM: { label: "Notice to Airmen", code: "NOTAM", tone: "text-accent" },
   SOP: { label: "Standard Ops", code: "SOP", tone: "text-muted-foreground" },
   OTHER: { label: "Document", code: "DOC", tone: "text-muted-foreground" },
 };

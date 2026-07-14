@@ -44,8 +44,7 @@ export function ChatPanel({
     });
   }, [messages]);
 
-  const canSend =
-    value.trim().length > 0 && !busy && processedCount > 0;
+  const canSend = value.trim().length > 0 && !busy;
 
   function submit() {
     if (!canSend) return;
@@ -69,7 +68,7 @@ export function ChatPanel({
               Aviation Intelligence Platform
             </h1>
             <p className="mono-label text-muted-foreground">
-              Document Q&amp;A Console
+              Agent Console
             </p>
           </div>
         </div>
@@ -108,8 +107,8 @@ export function ChatPanel({
         ) : (
           <span className="text-xs text-muted-foreground">
             {processedCount > 0
-              ? "All processed documents — select one in the library to narrow scope"
-              : "Upload and process a PDF to start asking questions"}
+              ? "All processed documents available to the agent"
+              : "No processed documents yet — the agent can still answer general questions"}
           </span>
         )}
       </div>
@@ -124,11 +123,11 @@ export function ChatPanel({
             </div>
             <div className="space-y-2">
               <h2 className="text-balance text-xl font-semibold tracking-tight text-foreground">
-                Ask questions grounded in your documents
+                Chat with the aviation intelligence agent
               </h2>
               <p className="text-pretty text-sm leading-relaxed text-muted-foreground">
-                Every answer is generated only from retrieved source excerpts and
-                returns page-level citations you can inspect.
+                Ask general aviation questions or request cited answers from your
+                uploaded documents. The agent chooses tools automatically.
               </p>
             </div>
             {/* {processedCount > 0 ? (
@@ -181,13 +180,11 @@ export function ChatPanel({
               }}
               rows={1}
               placeholder={
-                processedCount === 0
-                  ? "Process a document first…"
-                  : selectedDocument
-                    ? `Ask about ${selectedDocument.original_filename}…`
-                    : "Ask about your documents…"
+                selectedDocument
+                  ? `Ask the agent about ${selectedDocument.original_filename}…`
+                  : "Ask the aviation intelligence agent…"
               }
-              disabled={processedCount === 0}
+              disabled={busy}
               className="max-h-40 min-h-[36px] w-full resize-none bg-transparent py-1.5 text-sm leading-relaxed outline-none placeholder:text-muted-foreground disabled:opacity-50"
             />
             <button
@@ -207,9 +204,9 @@ export function ChatPanel({
           </div>
           <p className="mt-1.5 px-1 mono-label text-muted-foreground">
             {selectedDocument
-              ? "1 document in scope · answers cite sources"
+              ? "1 document in scope"
               : processedCount > 0
-                ? `${processedCount} processed · all in scope`
+                ? `${processedCount} processed documents available`
                 : "No processed documents"}{" "}
             · enter to send · shift+enter for newline
           </p>

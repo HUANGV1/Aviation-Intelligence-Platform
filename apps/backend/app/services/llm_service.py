@@ -20,6 +20,7 @@ from google.genai import errors as genai_errors
 from google.genai import types
 
 from app.config import BACKEND_DIR, settings
+from app.tools.base import ToolDefinition
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,15 @@ class LLMError(Exception):
 
 class LLMQuotaError(LLMError):
     """Raised when Gemini quota or rate limits block generation."""
+
+
+@dataclass(frozen=True)
+class AgentTurnResult:
+    """Result from a single Gemini agent turn."""
+
+    text: str | None = None
+    function_name: str | None = None
+    function_args: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -261,3 +271,116 @@ def generate_json(
                 raise LLMError("Failed to generate LLM response.") from exc
 
     raise LLMError("Failed to generate LLM response.") from last_error
+
+
+def _build_function_declarations(
+    tool_definitions: list[ToolDefinition],
+) -> list[types.FunctionDeclaration]:
+    declarations: list[types.FunctionDeclaration] = []
+    for tool in tool_definitions:
+        declarations.append(
+            types.FunctionDeclaration(
+                name=tool.name,
+                description=tool.description,
+                parameters_json_schema=tool.parameters_schema,
+            )
+        )
+    return declarations
+
+
+def _extract_agent_turn(response: object) -> AgentTurnResult:
+    candidates = getattr(response, "candidates", None) or []
+    if not candidates:
+        text = getattr(response, "text", None)
+        if text:
+            return AgentTurnResult(text=str(text).strip())
+        raise LLMError("LLM returned an empty agent response.")
+
+    content = getattr(candidates[0], "content", None)
+    parts = getattr(content, "parts", None) or []
+
+    text_parts: list[str] = []
+    for part in parts:
+        function_call = getattr(part, "function_call", None)
+        if function_call is not None:
+            name = getattr(function_call, "name", None)
+            args = getattr(function_call, "args", None) or {}
+            if name:
+                return AgentTurnResult(
+                    function_name=str(name),
+                    function_args=dict(args),
+                )
+
+        text = getattr(part, "text", None)
+        if text:
+            text_parts.append(str(text))
+
+    if text_parts:
+        return AgentTurnResult(text="\n".join(text_parts).strip())
+
+    fallback_text = getattr(response, "text", None)
+    if fallback_text:
+        return AgentTurnResult(text=str(fallback_text).strip())
+
+    raise LLMError("LLM returned an empty agent response.")
+
+
+def generate_agent_turn(
+    *,
+    system_instructions: str,
+    user_content: str,
+    tool_definitions: list[ToolDefinition],
+    model: str | None = None,
+    temperature: float | None = None,
+    max_output_tokens: int | None = None,
+) -> AgentTurnResult:
+    """Run one Gemini turn with optional function-calling tools."""
+    client = _get_client()
+    resolved_model = model or settings.llm_model
+    resolved_temperature = (
+        temperature if temperature is not None else settings.agent_temperature
+    )
+    resolved_max_tokens = (
+        max_output_tokens
+        if max_output_tokens is not None
+        else settings.agent_max_output_tokens
+    )
+
+    declarations = _build_function_declarations(tool_definitions)
+    tools = [types.Tool(function_declarations=declarations)] if declarations else None
+
+    config = types.GenerateContentConfig(
+        temperature=resolved_temperature,
+        max_output_tokens=resolved_max_tokens,
+        system_instruction=system_instructions,
+        tools=tools,
+    )
+
+    last_error: Exception | None = None
+    for attempt in range(2):
+        try:
+            response = client.models.generate_content(
+                model=resolved_model,
+                contents=user_content,
+                config=config,
+            )
+            return _extract_agent_turn(response)
+        except LLMError:
+            raise
+        except Exception as exc:
+            last_error = exc
+            if _is_quota_error(exc):
+                logger.warning(
+                    "Gemini quota/rate limit for model %s: %s",
+                    resolved_model,
+                    exc,
+                )
+                raise LLMQuotaError(_quota_error_message(resolved_model)) from exc
+            if attempt == 0:
+                logger.warning("Agent turn failed, retrying once: %s", exc)
+                time.sleep(2)
+            else:
+                logger.warning("Agent turn failed after retry: %s", exc)
+                raise LLMError("Failed to generate agent response.") from exc
+
+    raise LLMError("Failed to generate agent response.") from last_error

@@ -1,9 +1,14 @@
 /**
  * Purpose: Shared HTTP client and TypeScript types for the FastAPI backend.
- * Interactions: Used by page.tsx and document-upload.tsx. Calls /health,
- * /documents, and /documents/upload using NEXT_PUBLIC_API_URL from .env.local.
+ * Interactions: Used by page.tsx, workspace.tsx, and document-library.tsx.
+ * Calls /health, /documents, /agent/chat, and document processing endpoints.
  */
-import type { ChatCitation } from "@/lib/chat-types";
+import type {
+  ChatCitation,
+  OperationalRecord,
+  OperationalSourceBundle,
+  ToolActivity as ChatToolActivity,
+} from "@/lib/chat-types";
 export type HealthResponse = {
   status: string;
   service: string;
@@ -93,6 +98,51 @@ export type RagQueryResponse = {
   answer: string;
   citations: RagCitation[];
   insufficient_evidence: boolean;
+  used_chunk_count: number;
+};
+
+export type ToolActivity = {
+  tool_name: string;
+  status: string;
+  summary: string;
+  error?: string | null;
+};
+
+export type OperationalRecordResponse = {
+  record_id: string;
+  title: string;
+  summary: string;
+  source_type: string;
+  provider: string;
+  source_url: string;
+  retrieved_at: string;
+  observed_at?: string | null;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  location?: string | null;
+  raw_text?: string | null;
+  metadata?: Record<string, unknown>;
+};
+
+export type OperationalSourceBundleResponse = {
+  provider: string;
+  source_type: string;
+  source_url: string;
+  retrieved_at: string;
+  records: OperationalRecordResponse[];
+  pagination: Record<string, unknown>;
+  is_live: boolean;
+};
+
+export type AgentChatResponse = {
+  message: string;
+  answer: string;
+  citations: RagCitation[];
+  operational_sources: OperationalSourceBundleResponse[];
+  insufficient_evidence: boolean;
+  used_tools: string[];
+  tool_activities: ToolActivity[];
+  direct_answer: boolean;
   used_chunk_count: number;
 };
 
@@ -416,6 +466,48 @@ export async function queryRag(payload: {
   }
 }
 
+export async function sendAgentMessage(payload: {
+  message: string;
+  document_id?: string;
+  top_k?: number;
+}): Promise<{
+  data: AgentChatResponse | null;
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/agent/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      let errorMessage = `Agent request failed (status ${response.status})`;
+
+      try {
+        const body = (await response.json()) as { detail?: unknown };
+        if (typeof body.detail === "string") {
+          errorMessage = body.detail;
+        }
+      } catch {
+        // Keep the default error message.
+      }
+
+      return { data: null, error: errorMessage };
+    }
+
+    const data = (await response.json()) as AgentChatResponse;
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { data: null, error: message };
+  }
+}
+
 export function formatTimestamp(value: string): string {
   // Fixed locale avoids SSR/client hydration mismatches (e.g. "p.m." vs "PM").
   return new Intl.DateTimeFormat("en-US", {
@@ -433,6 +525,48 @@ export function toChatCitation(citation: RagCitation): ChatCitation {
     snippet: citation.text,
     score: citation.similarity,
     sourceId: citation.source_id,
+  };
+}
+
+export function toChatToolActivity(activity: ToolActivity): ChatToolActivity {
+  return {
+    toolName: activity.tool_name,
+    status: activity.status,
+    summary: activity.summary,
+    error: activity.error ?? null,
+  };
+}
+
+export function toChatOperationalRecord(
+  record: OperationalRecordResponse,
+): OperationalRecord {
+  return {
+    recordId: record.record_id,
+    title: record.title,
+    summary: record.summary,
+    sourceType: record.source_type,
+    provider: record.provider,
+    sourceUrl: record.source_url,
+    retrievedAt: record.retrieved_at,
+    observedAt: record.observed_at ?? null,
+    validFrom: record.valid_from ?? null,
+    validTo: record.valid_to ?? null,
+    location: record.location ?? null,
+    rawText: record.raw_text ?? null,
+  };
+}
+
+export function toChatOperationalSource(
+  bundle: OperationalSourceBundleResponse,
+): OperationalSourceBundle {
+  return {
+    provider: bundle.provider,
+    sourceType: bundle.source_type,
+    sourceUrl: bundle.source_url,
+    retrievedAt: bundle.retrieved_at,
+    records: bundle.records.map(toChatOperationalRecord),
+    pagination: bundle.pagination,
+    isLive: bundle.is_live,
   };
 }
 
