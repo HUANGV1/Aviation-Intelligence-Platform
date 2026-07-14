@@ -131,7 +131,7 @@ export function ChatPanel({
                 returns page-level citations you can inspect.
               </p>
             </div>
-            {processedCount > 0 ? (
+            {/* {processedCount > 0 ? (
               <div className="grid w-full gap-2">
                 {SCOPED_SUGGESTIONS.map((s) => (
                   <button
@@ -151,7 +151,7 @@ export function ChatPanel({
                 No processed documents yet. Upload a PDF and run Process in the
                 library.
               </p>
-            )}
+            )} */}
           </div>
         ) : (
           <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 md:px-6">

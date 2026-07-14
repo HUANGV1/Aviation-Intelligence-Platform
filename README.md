@@ -1,24 +1,30 @@
 # Aviation Intelligence Platform
 
-Monorepo for the Aviation Intelligence AI Platform MVP — upload aviation PDFs, ask cited questions, and generate flight briefings.
+Upload aviation PDFs, ask questions with cited answers, and explore your document library through a web console.
 
-## Phase 1 Status
+## Features
 
-This repository includes the Phase 1 foundation:
+- **Document library** — upload PDFs, process them for search, and manage your collection
+- **Cited Q&A** — ask questions scoped to one document or your full library; answers include source citations
+- **Semantic search** — vector search over document chunks powered by pgvector
+- **Health monitoring** — frontend and API report backend and database connectivity
 
-- Monorepo structure (`apps/frontend`, `apps/backend`)
-- Next.js frontend (TypeScript)
-- FastAPI backend (Python)
-- Supabase (hosted PostgreSQL + pgvector)
-- Backend health endpoint with database connectivity check
-- Frontend page that displays backend health status
+## Tech Stack
+
+| Layer | Stack |
+|-------|-------|
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS |
+| Backend | FastAPI, Python 3.12+ |
+| Database | Supabase (PostgreSQL + pgvector) |
+| AI | Google Gemini (embeddings + answer generation) |
 
 ## Prerequisites
 
 - Git
 - Node.js 22+
 - Python 3.12+
-- Free [Supabase](https://supabase.com) account (no local Postgres install required)
+- A [Supabase](https://supabase.com) project
+- A Google Gemini API key
 
 ## Quick Start
 
@@ -29,7 +35,7 @@ git clone https://github.com/HUANGV1/Aviation-Intelligence-Platform.git
 cd Aviation-Intelligence-Platform
 ```
 
-2. **Set up Supabase** — follow [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) to create a project, enable pgvector, and copy your connection string.
+2. Set up Supabase — follow [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) to create a project, enable pgvector, and run the schema from `infra/init-db.sql`.
 
 3. Copy environment files:
 
@@ -39,7 +45,7 @@ cp apps/backend/.env.example apps/backend/.env
 cp apps/frontend/.env.local.example apps/frontend/.env.local
 ```
 
-4. Paste your Supabase credentials into `apps/backend/.env`.
+4. Fill in `apps/backend/.env` with your Supabase credentials and `GEMINI_API_KEY`. Adjust other settings as needed (see [Environment Variables](#environment-variables)).
 
 5. Start the backend (terminal 1):
 
@@ -63,58 +69,69 @@ npm run dev
 7. Open the app:
 
 - Frontend: http://localhost:3000
-- Backend health: http://localhost:8000/health
-- Backend docs: http://localhost:8000/docs
+- API health: http://localhost:8000/health
+- API docs: http://localhost:8000/docs
+
+Upload a PDF from the document library, wait for processing to finish, then ask a question in the chat panel.
 
 ## Project Structure
 
 ```text
 apps/
-  frontend/     Next.js TypeScript app
-  backend/      FastAPI Python app
+  frontend/       Next.js web app (document library + chat)
+  backend/        FastAPI API (uploads, processing, RAG)
 docs/
   SUPABASE_SETUP.md
 infra/
-  init-db.sql   pgvector enable script (run in Supabase SQL Editor)
-sample-data/    Demo PDFs (future phases)
-.env.example
-README.md
+  init-db.sql     Database schema (run in Supabase SQL Editor)
+sample-data/      Sample PDFs for local testing
+uploads/          Local PDF storage (created on first upload)
 ```
 
-## Verification (Phase 1 Definition of Done)
+## API Overview
 
-With Supabase configured and backend + frontend running:
+| Endpoint | Description |
+|----------|-------------|
+| `GET /health` | Service and database health |
+| `POST /documents/upload` | Upload a PDF |
+| `GET /documents` | List documents |
+| `POST /documents/{id}/process` | Extract text, chunk, and embed |
+| `POST /rag/query` | Ask a question with cited answer |
+| `POST /rag/search` | Semantic search over chunks |
 
-1. Frontend loads at http://localhost:3000
-2. Frontend shows backend status as `healthy`
-3. Frontend shows database status as `healthy`
-4. `GET http://localhost:8000/health` returns JSON with `"status": "healthy"` and `"database": { "connected": true }`
-
-Example health response:
-
-```json
-{
-  "status": "healthy",
-  "service": "aviation-intelligence-backend",
-  "database": {
-    "connected": true,
-    "error": null
-  }
-}
-```
+Full request/response schemas are available at http://localhost:8000/docs when the backend is running.
 
 ## Environment Variables
 
-| Variable | Location | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | `apps/backend/.env` | Supabase Postgres connection string |
-| `SUPABASE_URL` | `apps/backend/.env` | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | `apps/backend/.env` | Supabase service role key (backend only, keep secret) |
-| `CORS_ORIGINS` | `apps/backend/.env` | Allowed frontend origins |
-| `NEXT_PUBLIC_API_URL` | `apps/frontend/.env.local` | Backend URL for the frontend |
+### Backend (`apps/backend/.env`)
 
-See [`.env.example`](.env.example) and [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) for full setup steps.
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | Supabase Postgres connection string (Session pooler) |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (keep secret) |
+| `GEMINI_API_KEY` | Google Gemini API key |
+| `CORS_ORIGINS` | Allowed frontend origins (e.g. `http://localhost:3000`) |
+| `UPLOAD_DIR` | Local directory for uploaded PDFs (default: `uploads`) |
+| `MAX_UPLOAD_MB` | Maximum upload size in MB |
+| `EMBEDDING_*` | Embedding provider, model, and rate limits |
+| `LLM_*` | Answer generation model and cache settings |
+| `RAG_*` | Retrieval thresholds and source text limits |
 
-## Next Steps
+See [`apps/backend/.env.example`](apps/backend/.env.example) for all options and defaults.
 
-Phase 2 adds document upload, local file storage, and a document library UI. See `AVIATION_INTELLIGENCE_AI_PLATFORM.md` and `MVP_SCOPE_AND_TIMELINE.md` for the full MVP roadmap.
+### Frontend (`apps/frontend/.env.local`)
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | Backend URL (default: `http://localhost:8000`) |
+
+## Running Tests
+
+From `apps/backend` with the virtual environment activated:
+
+```bash
+pytest
+```
+
+Some tests require a configured database and API keys. See individual test modules for details.
