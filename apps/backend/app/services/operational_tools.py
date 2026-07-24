@@ -12,6 +12,7 @@ from app.tools.document_search import DOCUMENT_SEARCH_TOOL_NAME
 
 OPERATIONAL_TOOL_NAMES = {
     "get_metar",
+    "get_notams",
     "get_taf",
     "get_international_sigmets",
 }

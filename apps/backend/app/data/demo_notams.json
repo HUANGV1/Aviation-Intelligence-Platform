@@ -1,0 +1,209 @@
+{
+  "KJFK": {
+    "icao": "KJFK",
+    "notams": [
+      {
+        "raw": "!KJFK KJFK RWY 04R/22L CLSD 1907001700-1907151700",
+        "notam_id": "A1234/2026",
+        "notam_id_domestic": "04/323",
+        "type": "N",
+        "location": "KJFK",
+        "effective": "2026-04-07T17:00:00Z",
+        "expiration": "2026-04-15T17:00:00Z",
+        "body": "RWY 04R/22L CLSD"
+      },
+      {
+        "raw": "!KJFK KJFK TWY B BTN TWY A AND TWY C CLSD",
+        "notam_id": "A1235/2026",
+        "notam_id_domestic": "04/324",
+        "type": "N",
+        "location": "KJFK",
+        "effective": "2026-04-01T12:00:00Z",
+        "expiration": "2026-06-01T12:00:00Z",
+        "body": "Taxiway B closed between Taxiway A and Taxiway C."
+      }
+    ],
+    "total": 2
+  },
+  "EGLL": {
+    "icao": "EGLL",
+    "notams": [
+      {
+        "raw": "!EGLL EGLL TWY A CLSD",
+        "notam_id": "B5678/2026",
+        "type": "N",
+        "location": "EGLL",
+        "effective": "2026-03-15T08:00:00Z",
+        "expiration": "2026-05-15T08:00:00Z",
+        "body": "Taxiway A closed for maintenance."
+      }
+    ],
+    "total": 1
+  },
+  "KLAX": {
+    "icao": "KLAX",
+    "notams": [
+      {
+        "raw": "!KLAX KLAX RWY 06R/24L NOT AVBL DUE WIP",
+        "notam_id": "C9012/2026",
+        "notam_id_domestic": "06/112",
+        "type": "N",
+        "location": "KLAX",
+        "effective": "2026-02-01T06:00:00Z",
+        "expiration": "2026-08-01T06:00:00Z",
+        "body": "Runway 06R/24L not available due to work in progress."
+      }
+    ],
+    "total": 1
+  },
+  "CYYZ": {
+    "icao": "CYYZ",
+    "notams": [
+      {
+        "raw": "D0670/26 NOTAMR D0563/26 A) CYYZ B) 2603111545 C) PERM E) AMEND PUBLICATIONS: NEW BUILDING 433941N 0794416W (APRX 4.7NM W AD (CYYZ)). 429FT AGL 1121FT AMSL. NOT LGTD, NOT PAINTED.",
+        "notam_id": "D0670/2026",
+        "type": "R",
+        "location": "CYYZ",
+        "effective": "2026-03-11T15:45:00Z",
+        "expiration": null,
+        "body": "AMEND PUBLICATIONS: NEW BUILDING 433941N 0794416W (APRX 4.7NM W AD (CYYZ)). 429FT AGL 1121FT AMSL. NOT LGTD, NOT PAINTED."
+      },
+      {
+        "raw": "D1308/26 NOTAMN A) CYYZ B) 2604231520 C) PERM E) AMEND PUBLICATIONS: ILS RWY 24L APCH: LOC/DME MINIMA TO READ: 1040 (493) 1 RVR 50",
+        "notam_id": "D1308/2026",
+        "type": "N",
+        "location": "CYYZ",
+        "effective": "2026-04-23T15:20:00Z",
+        "expiration": null,
+        "body": "AMEND PUBLICATIONS: ILS RWY 24L APCH: LOC/DME MINIMA TO READ: 1040 (493) 1 RVR 50"
+      },
+      {
+        "raw": "D1993/26 NOTAMN A) CYYZ B) 2606080400 C) 2609031800EST E) MAINT CREW AND EQPT APRX 1750FT BEYOND DEP END RWY 15R AND APRX 350FT RIGHT RWY EXTENDED CENTRE LINE. 46FT AGL, 574FT AMSL. LGTD, NOT PAINTED",
+        "notam_id": "D1993/2026",
+        "type": "N",
+        "location": "CYYZ",
+        "effective": "2026-06-08T04:00:00Z",
+        "expiration": "2026-09-03T18:00:00Z",
+        "body": "MAINT CREW AND EQPT APRX 1750FT BEYOND DEP END RWY 15R AND APRX 350FT RIGHT RWY EXTENDED CENTRE LINE. 46FT AGL, 574FT AMSL. LGTD, NOT PAINTED"
+      },
+      {
+        "raw": "D2003/26 NOTAMR D0610/26 A) CYYZ B) 2606051836 C) 2608281800EST E) RNAV (GNSS) Z RWY 15R APCH: LNAV/VNAV MINIMA: NOT AUTH LNAV MINIMA TO READ: 1040 (489) 1 RVR 50 DIST/ALT TABLE: LAST ALT TO READ 1.4/1040 INSTEAD OF 1.2/980",
+        "notam_id": "D2003/2026",
+        "type": "R",
+        "location": "CYYZ",
+        "effective": "2026-06-05T18:36:00Z",
+        "expiration": "2026-08-28T18:00:00Z",
+        "body": "RNAV (GNSS) Z RWY 15R APCH: LNAV/VNAV MINIMA: NOT AUTH. LNAV MINIMA TO READ: 1040 (489) 1 RVR 50. DIST/ALT TABLE: LAST ALT TO READ 1.4/1040 INSTEAD OF 1.2/980"
+      },
+      {
+        "raw": "D2079/26 NOTAMN A) CYYZ B) 2606092055 C) PERM E) AMEND PUBLICATIONS: RWY DATA: TWY: ADD: TWY V: ACFT WITH WINGSPANS 214FT AND GREATER NOT AUTH BTWN TWY E AND TWY F",
+        "notam_id": "D2079/2026",
+        "type": "N",
+        "location": "CYYZ",
+        "effective": "2026-06-09T20:55:00Z",
+        "expiration": null,
+        "body": "AMEND PUBLICATIONS: ADD TWY V: ACFT WITH WINGSPANS 214FT AND GREATER NOT AUTH BTWN TWY E AND TWY F. TAXI CHART NOTES: ACFT WITH WINGSPANS 214FT AND GREATER NO TAXIING ON TWY V BTWN TWY E AND TWY F"
+      },
+      {
+        "raw": "D2655/26 NOTAMR D1303/26 A) CYYZ B) 2607141332 C) 2610121600EST E) ALL SID AND DEPARTURE PROCEDURE: RWY 23: ADD: REQUIRES A MINIMUM CLIMB GRADIENT OF 230 FT/NM TO 1300.",
+        "notam_id": "D2655/2026",
+        "type": "R",
+        "location": "CYYZ",
+        "effective": "2026-07-14T13:32:00Z",
+        "expiration": "2026-10-12T16:00:00Z",
+        "body": "ALL SID AND DEPARTURE PROCEDURE: RWY 23: ADD: REQUIRES A MINIMUM CLIMB GRADIENT OF 230 FT/NM TO 1300."
+      },
+      {
+        "raw": "D2701/26 NOTAMN A) CYYZ B) 2607161658 C) PERM E) AMEND PUBLICATIONS: MULTIPLE CRANES WITHIN 319FT RADIUS CENTRED ON 434039N 0793321W APRX 1.4NM BFR THR 24L AND 1.1NM SE EXTENDED RCL. 264FT AGL 781FT AMSL. LGTD, NOT PAINTED.",
+        "notam_id": "D2701/2026",
+        "type": "N",
+        "location": "CYYZ",
+        "effective": "2026-07-16T16:58:00Z",
+        "expiration": null,
+        "body": "AMEND PUBLICATIONS: MULTIPLE CRANES WITHIN 319FT RADIUS CENTRED ON 434039N 0793321W APRX 1.4NM BFR THR 24L AND 1.1NM SE EXTENDED RCL. 264FT AGL 781FT AMSL. LGTD, NOT PAINTED."
+      },
+      {
+        "raw": "V0253/26 NOTAMN A) CYYZ B) 2607161535 C) 2610121600 E) [US DOD PROCEDURAL NOTAM] IFR TAKE-OFF MINIMUMS AND (OBSTACLE) DEPARTURE PROCEDURES CHANGED AMDT 5, DEPARTURE PROCEDURE: ADD RWY 23: REQUIRES A MINIMUM CLIMB GRADIENT OF 230 FT/NM TO 1300 OR SPECIFIED TAKEOFF MINIMUM VISIBILITY OF 1 SM (CAT A), 1 1/2 SM (CAT B), 2 SM (CAT CD) IN VISUAL CONDITIONS.",
+        "notam_id": "V0253/2026",
+        "type": "N",
+        "location": "CYYZ",
+        "effective": "2026-07-16T15:35:00Z",
+        "expiration": "2026-10-12T16:00:00Z",
+        "body": "[US DOD PROCEDURAL NOTAM] IFR TAKE-OFF MINIMUMS AND (OBSTACLE) DEPARTURE PROCEDURES CHANGED AMDT 5, DEPARTURE PROCEDURE: ADD RWY 23: REQUIRES A MINIMUM CLIMB GRADIENT OF 230 FT/NM TO 1300 OR SPECIFIED TAKEOFF MINIMUM VISIBILITY OF 1 SM (CAT A), 1 1/2 SM (CAT B), 2 SM (CAT CD) IN VISUAL CONDITIONS."
+      },
+      {
+        "raw": "D2552/26 NOTAMR D1076/26 A) CYYZ B) 2607091605 C) 2610091500 E) DUE CONST: STAND 181 LEAD-IN LINE POSITION MODIFIED. VISUAL DOCKING GUIDANCE SYSTEM NOT AVBL. ACFT TO TRANSITION FM STARTBOX 9C TO LEAD-IN LINE TRIANGLE THEN STRICT ADHERANCE ALONG LEAD-IN LINE.",
+        "notam_id": "D2552/2026",
+        "type": "R",
+        "location": "CYYZ",
+        "effective": "2026-07-09T16:05:00Z",
+        "expiration": "2026-10-09T15:00:00Z",
+        "body": "DUE CONST: STAND 181 LEAD-IN LINE POSITION MODIFIED. VISUAL DOCKING GUIDANCE SYSTEM NOT AVBL. ACFT TO TRANSITION FM STARTBOX 9C TO LEAD-IN LINE TRIANGLE THEN STRICT ADHERANCE ALONG LEAD-IN LINE."
+      },
+      {
+        "raw": "D2306/26 NOTAMR D0835/26 A) CYYZ B) 2606271458 C) 2609251500 E) OPR TRIAL OF NEW ANGLED RWY HOLD POSITION IN EFFECT ON TWY D4 AND TWY D5, SOUTH OF RWY 06L/24R, REFER TO AIC 15/21",
+        "notam_id": "D2306/2026",
+        "type": "R",
+        "location": "CYYZ",
+        "effective": "2026-06-27T14:58:00Z",
+        "expiration": "2026-09-25T15:00:00Z",
+        "body": "OPR TRIAL OF NEW ANGLED RWY HOLD POSITION IN EFFECT ON TWY D4 AND TWY D5, SOUTH OF RWY 06L/24R, REFER TO AIC 15/21"
+      },
+      {
+        "raw": "D2718/26 NOTAMR D2178/26 A) CYYZ B) 2607171714 C) 2608162100 D) DAILY 1200-2100 E) MOBILE CRANE WITHIN 70FT RADIUS CENTRED ON 433924N 0793812W APRX 3640FT BFR THR 06L AND 1250FT NW EXTENDED RCL. 100FT AGL 628FT AMSL. LGTD, NOT PAINTED.",
+        "notam_id": "D2718/2026",
+        "type": "R",
+        "location": "CYYZ",
+        "effective": "2026-07-17T17:14:00Z",
+        "expiration": "2026-08-16T21:00:00Z",
+        "body": "DAILY 1200-2100. MOBILE CRANE WITHIN 70FT RADIUS CENTRED ON 433924N 0793812W APRX 3640FT BFR THR 06L AND 1250FT NW EXTENDED RCL. 100FT AGL 628FT AMSL. LGTD, NOT PAINTED."
+      },
+      {
+        "raw": "G1604/26 NOTAMR G1196/26 A) CYYZ B) 2605291710 C) 2607312359 E) PEARSON (TORONTO/LBP INTL) VOR YTP 116.55MHZ U/S",
+        "notam_id": "G1604/2026",
+        "type": "R",
+        "location": "CYYZ",
+        "effective": "2026-05-29T17:10:00Z",
+        "expiration": "2026-07-31T23:59:00Z",
+        "body": "PEARSON (TORONTO/LBP INTL) VOR YTP 116.55MHZ U/S"
+      },
+      {
+        "raw": "D2824/26 NOTAMN A) CYYZ B) 2607261300 C) 2607262000 E) RWY 15R/33L CLSD AVBL AS TWY.",
+        "notam_id": "D2824/2026",
+        "type": "N",
+        "location": "CYYZ",
+        "effective": "2026-07-26T13:00:00Z",
+        "expiration": "2026-07-26T20:00:00Z",
+        "body": "RWY 15R/33L CLSD AVBL AS TWY."
+      },
+      {
+        "raw": "D2802/26 NOTAMN A) CYYZ B) 2607250401 C) 2607261000 D) JUL 25 0401-1000, JUL 26 0701-1000 E) RWY 05/23 CLSD.",
+        "notam_id": "D2802/2026",
+        "type": "N",
+        "location": "CYYZ",
+        "effective": "2026-07-25T04:01:00Z",
+        "expiration": "2026-07-26T10:00:00Z",
+        "body": "JUL 25 0401-1000, JUL 26 0701-1000. RWY 05/23 CLSD."
+      },
+      {
+        "raw": "D2813/26 NOTAMN A) CYYZ B) 2607251200 C) 2607252200 E) TWY D6, TWY D8 BTN RWY 06L/24R AND TWY D, TWY C4 BTN TWY D AND TWY D4, TWY C BTN TWY C4 AND TWY D4, TWY D BTN TWY D4 AND TWY D6, TWY F BTN TWY D AND TWY V CLSD.",
+        "notam_id": "D2813/2026",
+        "type": "N",
+        "location": "CYYZ",
+        "effective": "2026-07-25T12:00:00Z",
+        "expiration": "2026-07-25T22:00:00Z",
+        "body": "TWY D6, TWY D8 BTN RWY 06L/24R AND TWY D, TWY C4 BTN TWY D AND TWY D4, TWY C BTN TWY C4 AND TWY D4, TWY D BTN TWY D4 AND TWY D6, TWY F BTN TWY D AND TWY V CLSD."
+      },
+      {
+        "raw": "S9192/26 NOTAMR S9183/26 A) CYYZ B) 2607242126 C) 2607250526 E) RSC 05/23/06L/24R/06R/24L/15L/33R/15R/33L 6/6/6 DRY. VALID JUL 24 2118 - JUL 25 0518.",
+        "notam_id": "S9192/2026",
+        "type": "R",
+        "location": "CYYZ",
+        "effective": "2026-07-24T21:26:00Z",
+        "expiration": "2026-07-25T05:26:00Z",
+        "body": "RSC 05 6/6/6 DRY, DRY, DRY. RSC 23 6/6/6 DRY, DRY, DRY. RSC 06L 6/6/6 DRY, DRY, DRY. RSC 24R 6/6/6 DRY, DRY, DRY. RSC 06R 6/6/6 DRY, DRY, DRY. RSC 24L 6/6/6 DRY, DRY, DRY. RSC 15L 6/6/6 DRY, DRY, DRY. RSC 33R 6/6/6 DRY, DRY, DRY. RSC 15R 6/6/6 DRY, DRY, DRY. RSC 33L 6/6/6 DRY, DRY, DRY. VALID JUL 24 2118 - JUL 25 0518."
+      }
+    ],
+    "total": 16
+  }
+}

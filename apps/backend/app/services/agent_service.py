@@ -37,6 +37,7 @@ Tool routing:
 - Use document_search for uploaded PDF evidence, accident reports, FAA guidance, and procedures.
 - Use get_metar for current airport weather observations.
 - Use get_taf for airport terminal forecasts.
+- Use get_notams for active airport NOTAMs and published operational notices.
 - Use get_international_sigmets for international area hazard advisories.
 
 Rules:

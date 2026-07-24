@@ -34,11 +34,13 @@ def get_tool_registry() -> ToolRegistry:
         from app.tools.document_search import DocumentSearchTool
         from app.tools.get_international_sigmets import GetInternationalSigmetsTool
         from app.tools.get_metar import GetMetarTool
+        from app.tools.get_notams import GetNotamsTool
         from app.tools.get_taf import GetTafTool
 
         registry = ToolRegistry()
         registry.register(DocumentSearchTool())
         registry.register(GetMetarTool())
+        registry.register(GetNotamsTool())
         registry.register(GetTafTool())
         registry.register(GetInternationalSigmetsTool())
         _default_registry = registry
