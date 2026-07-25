@@ -109,7 +109,7 @@ apps/
     app/services/           Agent, RAG, embeddings, PDF pipeline, ops clients
     app/tools/              Typed agent tools + registry
     tests/                  Pytest suite
-docs/                       Architecture, roadmap, Supabase setup
+docs/                       Product overview, agent architecture, Supabase setup
 infra/init-db.sql           Schema: documents, chunks, embeddings, chat
 sample-data/                Small PDFs for local testing
 ```
@@ -265,14 +265,15 @@ Some integration tests expect a configured database and/or `GEMINI_API_KEY`.
 - Document library + processing pipeline (chunking, embeddings, pgvector)
 - Tool activity, citations, and operational provenance in the UI
 
-**Planned / not in this MVP**
+**Not in this MVP / possible next steps**
 
 - End-user authentication and multi-tenant ownership (local demo only today)
 - MCP adapter for external tool servers
 - Hybrid retrieval + reranking
 - Observability dashboard and evaluation harness
+- Live NOTAM provider (demo fixtures today)
 
-See [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md).
+Product vision and future ideas: [`docs/AVIATION_INTELLIGENCE_AI_PLATFORM.md`](docs/AVIATION_INTELLIGENCE_AI_PLATFORM.md)
 
 > **Note for reviewers:** This is a **local portfolio MVP**. The API is intentionally open for easy demos on localhost. Do not expose it to the public internet without auth, rate limits, and tenancy.
 
@@ -282,9 +283,9 @@ See [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md).
 
 | Doc | Contents |
 |-----|----------|
+| [`docs/AVIATION_INTELLIGENCE_AI_PLATFORM.md`](docs/AVIATION_INTELLIGENCE_AI_PLATFORM.md) | Product vision, shipped scope, data model, future direction |
 | [`docs/AGENT_ARCHITECTURE.md`](docs/AGENT_ARCHITECTURE.md) | Agent flow, tools, trust boundaries |
 | [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) | Database + pgvector setup |
-| [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md) | Implemented vs planned phases |
 | [`infra/init-db.sql`](infra/init-db.sql) | Schema bootstrap |
 
 ---
