@@ -6,6 +6,7 @@ import { ChevronRight, Cloud, FileText, Quote, Radio, Wrench } from "lucide-reac
 import { formatTime } from "@/lib/format";
 import type { ChatMessage, OperationalSourceBundle, ToolActivity } from "@/lib/chat-types";
 import { cn } from "@/lib/utils";
+import { MarkdownContent } from "./markdown-content";
 
 function ToolActivityList({ activities }: { activities: ToolActivity[] }) {
   if (!activities.length) return null;
@@ -36,7 +37,7 @@ function OperationalSourceList({
 }: {
   sources: OperationalSourceBundle[];
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   if (!sources.length) return null;
 
   return (
@@ -116,7 +117,7 @@ function CitationList({
 }: {
   citations: NonNullable<ChatMessage["citations"]>;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   if (!citations.length) return null;
   return (
     <div className="mt-3 rounded-md border border-border bg-background/60">
@@ -185,12 +186,20 @@ export function ChatMessageRow({ message }: { message: ChatMessage }) {
       <div className="flex animate-fade-rise justify-end">
         <div className="max-w-[85%]">
           <div className="mb-1 flex items-center justify-end gap-2">
+            {message.scopedDocumentName && (
+              <span
+                className="max-w-[180px] truncate mono-label text-primary"
+                title={`Document search limited to ${message.scopedDocumentName}`}
+              >
+                scoped · {message.scopedDocumentName}
+              </span>
+            )}
             <span className="mono-label text-muted-foreground">
               {formatTime(message.createdAt)}
             </span>
             <span className="mono-label text-primary">You</span>
           </div>
-          <div className="rounded-md rounded-tr-none border border-primary/40 bg-primary/10 px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
+          <div className="whitespace-pre-wrap rounded-md rounded-tr-none border border-primary/40 bg-primary/10 px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
             {message.content}
           </div>
         </div>
@@ -241,7 +250,7 @@ export function ChatMessageRow({ message }: { message: ChatMessage }) {
             {message.toolActivities && (
               <ToolActivityList activities={message.toolActivities} />
             )}
-            {message.content}
+            <MarkdownContent content={message.content} />
             {message.operationalSources && (
               <OperationalSourceList sources={message.operationalSources} />
             )}

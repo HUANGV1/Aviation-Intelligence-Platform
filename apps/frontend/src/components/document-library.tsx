@@ -1,13 +1,13 @@
 /**
- * Purpose: Document library sidebar with upload, scope selection, and management.
+ * Purpose: Document library sidebar with upload and management.
  * Interactions: Uses lib/api.ts for upload, process, delete, chunks, and file URLs.
+ * Indexed documents can be dragged into the chat area to limit retrieval scope.
  */
 "use client";
 
 import { Fragment, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import {
-  Check,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -26,6 +26,7 @@ import {
   getDocumentFileUrl,
   processDocument,
 } from "@/lib/api";
+import { setDocumentDragData } from "@/lib/document-dnd";
 import { formatRelativeDate } from "@/lib/format";
 import { SOURCE_META, normalizeSourceType } from "@/lib/source-meta";
 import { cn } from "@/lib/utils";
@@ -34,10 +35,8 @@ type DocumentLibraryProps = {
   documents: Document[];
   error: string | null;
   uploadError: string | null;
-  selectedScopeId: string | null;
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
-  onToggleScopeSelect: (id: string) => void;
   onUpload: (files: FileList) => void;
   onDocumentsChange: Dispatch<SetStateAction<Document[]>>;
 };
@@ -92,10 +91,8 @@ export function DocumentLibrary({
   documents,
   error,
   uploadError,
-  selectedScopeId,
   collapsed = false,
   onToggleCollapsed,
-  onToggleScopeSelect,
   onUpload,
   onDocumentsChange,
 }: DocumentLibraryProps) {
@@ -358,34 +355,28 @@ export function DocumentLibrary({
         ) : (
           <ul className="flex flex-col gap-1.5">
             {filtered.map((doc) => {
-              const selected = selectedScopeId === doc.id;
               const meta = SOURCE_META[normalizeSourceType(doc.source_type)];
-              const selectable = doc.status === "processed";
+              const draggable = doc.status === "processed";
               const isExpanded = expandedId === doc.id;
 
               return (
                 <Fragment key={doc.id}>
                   <li>
                     <div
+                      draggable={draggable}
+                      onDragStart={(e) => {
+                        if (!draggable) {
+                          e.preventDefault();
+                          return;
+                        }
+                        setDocumentDragData(e.dataTransfer, doc.id);
+                      }}
                       className={cn(
-                        "group relative w-full rounded-md border text-left transition-colors",
-                        selected
-                          ? "border-primary/70 bg-primary/10"
-                          : "border-border bg-card/40 hover:bg-card",
+                        "group relative w-full rounded-md border border-border bg-card/40 text-left transition-colors hover:bg-card",
+                        draggable && "cursor-grab active:cursor-grabbing",
                       )}
                     >
-                      {selected && (
-                        <span className="absolute inset-y-0 left-0 w-0.5 rounded-full bg-primary" />
-                      )}
-                      <button
-                        type="button"
-                        disabled={!selectable}
-                        onClick={() => onToggleScopeSelect(doc.id)}
-                        className={cn(
-                          "w-full px-3 py-2.5 text-left",
-                          !selectable && "cursor-not-allowed opacity-60",
-                        )}
-                      >
+                      <div className="w-full px-3 py-2.5 text-left">
                         <div className="flex items-start gap-2.5">
                           <span
                             className={cn(
@@ -412,18 +403,8 @@ export function DocumentLibrary({
                               · {formatRelativeDate(doc.uploaded_at)}
                             </p>
                           </div>
-                          <span
-                            className={cn(
-                              "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
-                              selected
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-border text-transparent group-hover:border-primary/50",
-                            )}
-                          >
-                            <Check className="size-3" />
-                          </span>
                         </div>
-                      </button>
+                      </div>
 
                       <div className="flex flex-wrap gap-1 border-t border-border/60 px-2 py-1.5">
                         {canProcess(doc.status) && (

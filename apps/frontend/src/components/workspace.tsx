@@ -7,6 +7,8 @@ import { ChatPanel } from "@/components/chat-panel";
 import { ChatSessionSidebar } from "@/components/chat-session-sidebar";
 import { ConsoleBackground } from "@/components/console-background";
 import { DocumentLibrary } from "@/components/document-library";
+import { SidebarResizeHandle } from "@/components/sidebar-resize-handle";
+import { usePersistedWidth } from "@/hooks/use-persisted-width";
 import type { ChatMessage, ChatSessionSummary } from "@/lib/chat-types";
 import type { Document, HealthResponse } from "@/lib/api";
 import {
@@ -24,17 +26,28 @@ import {
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
+const COLLAPSED_SIDEBAR_WIDTH = 48;
+const CHAT_SIDEBAR_DEFAULT = 280;
+const DOC_SIDEBAR_DEFAULT = 340;
+const SIDEBAR_MIN = 220;
+const SIDEBAR_MAX = 520;
+
 function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function toUiMessage(record: ReturnType<typeof toChatMessageRecord>): ChatMessage {
+function toUiMessage(
+  record: ReturnType<typeof toChatMessageRecord>,
+  scope?: { documentId: string | null; documentName: string | null },
+): ChatMessage {
+  const isUser = record.role === "user";
   return {
     id: record.id,
-    role: record.role === "assistant" ? "assistant" : "user",
+    role: isUser ? "user" : "assistant",
     content: record.content,
     sessionId: record.sessionId,
-    scopedDocumentId: null,
+    scopedDocumentId: isUser ? (scope?.documentId ?? null) : null,
+    scopedDocumentName: isUser ? (scope?.documentName ?? null) : null,
     citations: record.citations,
     operationalSources: record.operationalSources,
     createdAt: record.createdAt,
@@ -68,6 +81,22 @@ export function Workspace({
   const [sessionLoadError, setSessionLoadError] = useState<string | null>(null);
   const [chatSidebarOpen, setChatSidebarOpen] = useState(true);
   const [docSidebarOpen, setDocSidebarOpen] = useState(true);
+  const [chatSidebarWidth, setChatSidebarWidth] = usePersistedWidth(
+    "aip.chatSidebarWidth",
+    {
+      defaultWidth: CHAT_SIDEBAR_DEFAULT,
+      minWidth: SIDEBAR_MIN,
+      maxWidth: SIDEBAR_MAX,
+    },
+  );
+  const [docSidebarWidth, setDocSidebarWidth] = usePersistedWidth(
+    "aip.docSidebarWidth",
+    {
+      defaultWidth: DOC_SIDEBAR_DEFAULT,
+      minWidth: SIDEBAR_MIN,
+      maxWidth: SIDEBAR_MAX,
+    },
+  );
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [mobileLibOpen, setMobileLibOpen] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -122,8 +151,8 @@ export function Workspace({
     initialHealth?.status?.toLowerCase() === "healthy" &&
     initialHealth.database.connected;
 
-  function toggleScopeSelect(id: string) {
-    setSelectedScopeId((prev) => (prev === id ? null : id));
+  function handleSetDocumentScope(documentId: string | null) {
+    setSelectedScopeId(documentId);
   }
 
   async function handleUpload(files: FileList) {
@@ -161,11 +190,6 @@ export function Workspace({
     setSessionLoadError(null);
     setMobileChatOpen(false);
 
-    const sessionSummary = sessions.find((session) => session.id === sessionId);
-    if (sessionSummary?.documentId) {
-      setSelectedScopeId(sessionSummary.documentId);
-    }
-
     const { data, error } = await fetchChatSession(sessionId);
     if (error || !data) {
       setSessionLoadError(error ?? "Could not load chat session.");
@@ -173,11 +197,22 @@ export function Workspace({
       return;
     }
 
-    if (data.document_id) {
-      setSelectedScopeId(data.document_id);
-    }
+    const sessionDocumentId = data.document_id ?? null;
+    setSelectedScopeId(sessionDocumentId);
 
-    setMessages(data.messages.map((message) => toUiMessage(toChatMessageRecord(message))));
+    const sessionDocumentName = sessionDocumentId
+      ? (documents.find((doc) => doc.id === sessionDocumentId)?.original_filename ??
+        "Selected document")
+      : null;
+
+    setMessages(
+      data.messages.map((message) =>
+        toUiMessage(toChatMessageRecord(message), {
+          documentId: sessionDocumentId,
+          documentName: sessionDocumentName,
+        }),
+      ),
+    );
   }
 
   async function handleDeleteSession(sessionId: string) {
@@ -201,12 +236,14 @@ export function Workspace({
   async function handleSend(text: string) {
     if (busy) return;
 
+    const scopedDocumentName = selectedDocument?.original_filename ?? null;
     const userMsg: ChatMessage = {
       id: uid(),
       role: "user",
       content: text,
       sessionId: activeSessionId,
       scopedDocumentId: selectedScopeId,
+      scopedDocumentName,
       createdAt: new Date().toISOString(),
     };
     const pendingId = uid();
@@ -216,6 +253,7 @@ export function Workspace({
       content: "",
       sessionId: activeSessionId,
       scopedDocumentId: selectedScopeId,
+      scopedDocumentName,
       createdAt: new Date().toISOString(),
       pending: true,
     };
@@ -332,10 +370,12 @@ export function Workspace({
       <div className="grid min-h-0 flex-1 grid-cols-[auto_1fr_auto]">
         <div className="hidden min-h-0 lg:block">
           <div
-            className={cn(
-              "h-full transition-[width] duration-200",
-              chatSidebarOpen ? "w-[280px]" : "w-12",
-            )}
+            className="group/sidebar relative h-full"
+            style={{
+              width: chatSidebarOpen
+                ? chatSidebarWidth
+                : COLLAPSED_SIDEBAR_WIDTH,
+            }}
           >
             <ChatSessionSidebar
               sessions={sessions}
@@ -352,10 +392,18 @@ export function Workspace({
                 void handleDeleteSession(sessionId);
               }}
             />
+            <SidebarResizeHandle
+              edge="right"
+              disabled={!chatSidebarOpen}
+              label="Resize chat sidebar"
+              onResize={(delta) =>
+                setChatSidebarWidth((prev) => prev + delta)
+              }
+            />
           </div>
         </div>
 
-        <div className="min-h-0">
+        <div className="min-h-0 min-w-0">
           {sessionLoadError && (
             <div className="border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive">
               {sessionLoadError}
@@ -365,31 +413,39 @@ export function Workspace({
             messages={messages}
             busy={busy}
             selectedDocument={selectedDocument}
-            processedCount={processedDocuments.length}
+            processedDocuments={processedDocuments}
             sessionTitle={sessionTitle}
             onSend={handleSend}
             onNewChat={handleNewChat}
-            onRemoveDoc={() => setSelectedScopeId(null)}
+            onSetDocumentScope={handleSetDocumentScope}
           />
         </div>
 
         <div className="hidden min-h-0 lg:block">
           <div
-            className={cn(
-              "h-full transition-[width] duration-200",
-              docSidebarOpen ? "w-[320px] xl:w-[360px]" : "w-12",
-            )}
+            className="group/sidebar relative h-full"
+            style={{
+              width: docSidebarOpen
+                ? docSidebarWidth
+                : COLLAPSED_SIDEBAR_WIDTH,
+            }}
           >
             <DocumentLibrary
               documents={documents}
               error={documentsError}
               uploadError={uploadError}
-              selectedScopeId={selectedScopeId}
               collapsed={!docSidebarOpen}
               onToggleCollapsed={() => setDocSidebarOpen((prev) => !prev)}
-              onToggleScopeSelect={toggleScopeSelect}
               onUpload={handleUpload}
               onDocumentsChange={setDocuments}
+            />
+            <SidebarResizeHandle
+              edge="left"
+              disabled={!docSidebarOpen}
+              label="Resize document library sidebar"
+              onResize={(delta) =>
+                setDocSidebarWidth((prev) => prev + delta)
+              }
             />
           </div>
         </div>
@@ -459,10 +515,6 @@ export function Workspace({
                 documents={documents}
                 error={documentsError}
                 uploadError={uploadError}
-                selectedScopeId={selectedScopeId}
-                onToggleScopeSelect={(id) => {
-                  toggleScopeSelect(id);
-                }}
                 onUpload={handleUpload}
                 onDocumentsChange={setDocuments}
               />

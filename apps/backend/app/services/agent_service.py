@@ -377,7 +377,8 @@ def _prepare_tool_arguments(
     if tool_name == DOCUMENT_SEARCH_TOOL_NAME and top_k is not None:
         arguments.setdefault("top_k", top_k)
     if is_document_search_tool(tool_name) and document_id is not None:
-        arguments.setdefault("document_id", str(document_id))
+        # UI/request scope always wins over any model-supplied document_id.
+        arguments["document_id"] = str(document_id)
 
     return tool_name, arguments
 

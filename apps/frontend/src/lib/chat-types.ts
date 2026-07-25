@@ -46,6 +46,7 @@ export interface ChatMessage {
   content: string;
   sessionId?: string | null;
   scopedDocumentId: string | null;
+  scopedDocumentName?: string | null;
   citations?: ChatCitation[];
   operationalSources?: OperationalSourceBundle[];
   createdAt: string;
