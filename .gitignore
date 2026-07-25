@@ -41,5 +41,11 @@ npm-debug.log*
 
 
 .cursor/
-docs/
+
+# Local / personal notes — keep public docs tracked for the portfolio README
+docs/to_add.md
+docs/aviation-intelligence-platform/
+docs/MVP_SCOPE_AND_TIMELINE.md
+docs/PROJECT_ROADMAP.md
+
 
