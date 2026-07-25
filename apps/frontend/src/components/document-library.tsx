@@ -8,6 +8,8 @@ import { Fragment, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import {
   Check,
+  ChevronLeft,
+  ChevronRight,
   FileText,
   Loader2,
   Plus,
@@ -33,6 +35,8 @@ type DocumentLibraryProps = {
   error: string | null;
   uploadError: string | null;
   selectedScopeId: string | null;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
   onToggleScopeSelect: (id: string) => void;
   onUpload: (files: FileList) => void;
   onDocumentsChange: Dispatch<SetStateAction<Document[]>>;
@@ -89,6 +93,8 @@ export function DocumentLibrary({
   error,
   uploadError,
   selectedScopeId,
+  collapsed = false,
+  onToggleCollapsed,
   onToggleScopeSelect,
   onUpload,
   onDocumentsChange,
@@ -221,8 +227,31 @@ export function DocumentLibrary({
     setChunksTotal(data.total);
   }
 
+  if (collapsed) {
+    return (
+      <aside className="flex h-full min-h-0 w-12 flex-col border-l border-border bg-panel/60 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-2 border-b border-border px-2 py-3">
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            className="flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+            aria-label="Expand document library"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <span className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-primary">
+            <FileText className="size-4" />
+          </span>
+          <span className="mono-label [writing-mode:vertical-rl] rotate-180 text-muted-foreground">
+            DOCS
+          </span>
+        </div>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="flex h-full min-h-0 flex-col border-r border-border bg-panel/60 backdrop-blur-sm">
+    <aside className="flex h-full min-h-0 w-full flex-col border-l border-border bg-panel/60 backdrop-blur-sm">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="mono-label text-muted-foreground">Library</span>
@@ -230,7 +259,19 @@ export function DocumentLibrary({
             / {documents.length} DOCS
           </span>
         </div>
-        <span className="mono-label text-muted-foreground">{indexed} indexed</span>
+        <div className="flex items-center gap-2">
+          <span className="mono-label text-muted-foreground">{indexed} indexed</span>
+          {onToggleCollapsed && (
+            <button
+              type="button"
+              onClick={onToggleCollapsed}
+              className="flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              aria-label="Collapse document library"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="px-3 pt-3">

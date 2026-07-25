@@ -1,5 +1,6 @@
 """Tests for the agent orchestrator and /agent/chat endpoint."""
 
+from datetime import UTC, datetime
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -7,9 +8,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.schemas.rag import RagCitation, RagQueryResponse
-from app.services.agent_service import AgentError, run_agent_chat
-from app.services.llm_service import AgentTurnResult, LLMQuotaError
+from app.schemas.chat import ChatMessageRecord
+from app.services.agent_service import (
+    AgentError,
+    _build_user_prompt,
+    _format_conversation_history,
+    run_agent_chat,
+)
+from app.services.llm_service import AgentFunctionCall, AgentTurnResult, LLMQuotaError
 from app.tools.base import ToolResult
 
 
@@ -19,7 +25,7 @@ def test_run_agent_chat_returns_direct_answer(mock_turn) -> None:
         text="I can help with aviation document questions and general aviation topics."
     )
 
-    response = run_agent_chat("What can you do?")
+    response = run_agent_chat("What can you do?", persist_memory=False)
 
     assert response.direct_answer is True
     assert response.answer.startswith("I can help")
@@ -35,10 +41,19 @@ def test_run_agent_chat_invokes_document_search_tool(
 ) -> None:
     chunk_id = uuid4()
     document_id = uuid4()
-    mock_turn.return_value = AgentTurnResult(
-        function_name="document_search",
-        function_args={"query": "contributing factors"},
-    )
+    mock_turn.side_effect = [
+        AgentTurnResult(
+            function_calls=(
+                AgentFunctionCall(
+                    name="document_search",
+                    args={"query": "contributing factors"},
+                ),
+            )
+        ),
+        AgentTurnResult(
+            text="Pilot fatigue was noted in the uploaded accident report."
+        ),
+    ]
     mock_execute_tool.return_value = ToolResult(
         tool_name="document_search",
         success=True,
@@ -64,7 +79,7 @@ def test_run_agent_chat_invokes_document_search_tool(
         },
     )
 
-    response = run_agent_chat("What were the contributing factors?")
+    response = run_agent_chat("What were the contributing factors?", persist_memory=False)
 
     assert response.direct_answer is False
     assert response.used_tools == ["document_search"]
@@ -72,6 +87,7 @@ def test_run_agent_chat_invokes_document_search_tool(
     assert response.tool_activities[0].status == "success"
     assert len(response.citations) == 1
     assert response.citations[0].source_id == "S1"
+    assert "Pilot fatigue" in response.answer
 
 
 @patch("app.services.agent_service._execute_tool")
@@ -81,8 +97,9 @@ def test_run_agent_chat_returns_tool_failure(
     mock_execute_tool,
 ) -> None:
     mock_turn.return_value = AgentTurnResult(
-        function_name="document_search",
-        function_args={"query": "weather"},
+        function_calls=(
+            AgentFunctionCall(name="document_search", args={"query": "weather"}),
+        )
     )
     mock_execute_tool.return_value = ToolResult(
         tool_name="document_search",
@@ -91,7 +108,7 @@ def test_run_agent_chat_returns_tool_failure(
         error="Query must not be empty.",
     )
 
-    response = run_agent_chat("What are the weather minimums?")
+    response = run_agent_chat("What are the weather minimums?", persist_memory=False)
 
     assert response.insufficient_evidence is True
     assert response.used_tools == ["document_search"]
@@ -100,7 +117,7 @@ def test_run_agent_chat_returns_tool_failure(
 
 def test_run_agent_chat_requires_non_empty_message() -> None:
     with pytest.raises(AgentError, match="Message must not be empty."):
-        run_agent_chat("   ")
+        run_agent_chat("   ", persist_memory=False)
 
 
 @patch("app.services.agent_service.generate_agent_turn")
@@ -108,7 +125,7 @@ def test_run_agent_chat_maps_quota_errors(mock_turn) -> None:
     mock_turn.side_effect = LLMQuotaError("Gemini quota exceeded.")
 
     with pytest.raises(LLMQuotaError):
-        run_agent_chat("Hello")
+        run_agent_chat("Hello", persist_memory=False)
 
 
 @patch("app.services.agent_service.synthesize_operational_answer")
@@ -122,10 +139,14 @@ def test_run_agent_chat_invokes_operational_tool(
     from app.schemas.operational import OperationalRecord, OperationalSourceBundle
     from app.services.operational_normalization import bundle_to_dict, utc_now
 
-    mock_turn.return_value = AgentTurnResult(
-        function_name="get_metar",
-        function_args={"ids": "KJFK"},
-    )
+    mock_turn.side_effect = [
+        AgentTurnResult(
+            function_calls=(
+                AgentFunctionCall(name="get_metar", args={"ids": "KJFK"}),
+            )
+        ),
+        AgentTurnResult(text="Current KJFK METAR indicates VFR conditions."),
+    ]
     bundle = OperationalSourceBundle(
         provider="aviationweather.gov",
         source_type="METAR",
@@ -153,12 +174,90 @@ def test_run_agent_chat_invokes_operational_tool(
     )
     mock_synthesize.return_value = "Current KJFK METAR indicates VFR conditions."
 
-    response = run_agent_chat("What is the current weather at KJFK?")
+    response = run_agent_chat("What is the current weather at KJFK?", persist_memory=False)
 
     assert response.used_tools == ["get_metar"]
     assert len(response.operational_sources) == 1
     assert response.operational_sources[0].source_type == "METAR"
     assert "KJFK" in response.answer
+    mock_synthesize.assert_not_called()
+
+
+def test_format_conversation_history_includes_recent_turns() -> None:
+    session_id = uuid4()
+    now = datetime.now(tz=UTC)
+    history = [
+        ChatMessageRecord(
+            id=uuid4(),
+            session_id=session_id,
+            role="user",
+            content="METAR for KJFK?",
+            created_at=now,
+        ),
+        ChatMessageRecord(
+            id=uuid4(),
+            session_id=session_id,
+            role="assistant",
+            content="KJFK is VFR.",
+            created_at=now,
+        ),
+    ]
+
+    formatted = _format_conversation_history(history)
+
+    assert "Recent conversation:" in formatted
+    assert "User: METAR for KJFK?" in formatted
+    assert "Assistant: KJFK is VFR." in formatted
+
+
+def test_build_user_prompt_includes_conversation_history() -> None:
+    session_id = uuid4()
+    now = datetime.now(tz=UTC)
+    prompt = _build_user_prompt(
+        "and the TAF?",
+        document_id=None,
+        has_processed_documents_hint=True,
+        conversation_history=[
+            ChatMessageRecord(
+                id=uuid4(),
+                session_id=session_id,
+                role="user",
+                content="METAR for KJFK?",
+                created_at=now,
+            ),
+            ChatMessageRecord(
+                id=uuid4(),
+                session_id=session_id,
+                role="assistant",
+                content="KJFK is VFR.",
+                created_at=now,
+            ),
+        ],
+    )
+
+    assert "Recent conversation:" in prompt
+    assert "User message: and the TAF?" in prompt
+
+
+@patch("app.services.agent_service._persist_chat_turn")
+@patch("app.services.agent_service._load_conversation_history")
+@patch("app.services.agent_service._resolve_session_id")
+@patch("app.services.agent_service.generate_agent_turn")
+def test_run_agent_chat_persists_turn_when_memory_enabled(
+    mock_turn,
+    mock_resolve_session,
+    mock_load_history,
+    mock_persist,
+) -> None:
+    session_id = uuid4()
+    mock_resolve_session.return_value = session_id
+    mock_load_history.return_value = []
+    mock_turn.return_value = AgentTurnResult(text="Follow-up acknowledged.")
+
+    response = run_agent_chat("and the TAF?", session_id=session_id)
+
+    assert response.session_id == session_id
+    mock_persist.assert_called_once()
 
 
 @patch("app.api.agent.run_agent_chat")

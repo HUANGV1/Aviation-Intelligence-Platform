@@ -5,6 +5,8 @@
  */
 import type {
   ChatCitation,
+  ChatMessageRecord,
+  ChatSessionSummary,
   OperationalRecord,
   OperationalSourceBundle,
   ToolActivity as ChatToolActivity,
@@ -135,6 +137,7 @@ export type OperationalSourceBundleResponse = {
 };
 
 export type AgentChatResponse = {
+  session_id?: string | null;
   message: string;
   answer: string;
   citations: RagCitation[];
@@ -144,6 +147,40 @@ export type AgentChatResponse = {
   tool_activities: ToolActivity[];
   direct_answer: boolean;
   used_chunk_count: number;
+};
+
+export type ChatSessionSummaryResponse = {
+  id: string;
+  title: string | null;
+  document_id: string | null;
+  message_count: number;
+  preview: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChatMessageRecordResponse = {
+  id: string;
+  session_id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  citations: RagCitation[];
+  operational_sources: OperationalSourceBundleResponse[];
+  tool_activities: ToolActivity[];
+  used_tools: string[];
+  direct_answer: boolean;
+  insufficient_evidence: boolean;
+  used_chunk_count: number;
+  created_at: string;
+};
+
+export type ChatSessionDetailResponse = ChatSessionSummaryResponse & {
+  messages: ChatMessageRecordResponse[];
+};
+
+export type ChatSessionListResponse = {
+  sessions: ChatSessionSummaryResponse[];
+  total: number;
 };
 
 export function getApiUrl(): string {
@@ -468,6 +505,7 @@ export async function queryRag(payload: {
 
 export async function sendAgentMessage(payload: {
   message: string;
+  session_id?: string;
   document_id?: string;
   top_k?: number;
 }): Promise<{
@@ -506,6 +544,145 @@ export async function sendAgentMessage(payload: {
     const message = err instanceof Error ? err.message : "Unknown error";
     return { data: null, error: message };
   }
+}
+
+export async function fetchChatSessions(): Promise<{
+  data: ChatSessionListResponse | null;
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/agent/sessions`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: `Failed to load chat sessions (status ${response.status})`,
+      };
+    }
+
+    const data = (await response.json()) as ChatSessionListResponse;
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { data: null, error: message };
+  }
+}
+
+export async function fetchChatSession(sessionId: string): Promise<{
+  data: ChatSessionDetailResponse | null;
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/agent/sessions/${sessionId}`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: `Failed to load chat session (status ${response.status})`,
+      };
+    }
+
+    const data = (await response.json()) as ChatSessionDetailResponse;
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { data: null, error: message };
+  }
+}
+
+export async function createChatSession(payload: {
+  title?: string;
+  document_id?: string;
+} = {}): Promise<{
+  data: ChatSessionDetailResponse | null;
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/agent/sessions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      return {
+        data: null,
+        error: `Failed to create chat session (status ${response.status})`,
+      };
+    }
+
+    const data = (await response.json()) as ChatSessionDetailResponse;
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { data: null, error: message };
+  }
+}
+
+export async function deleteChatSession(sessionId: string): Promise<{
+  error: string | null;
+}> {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/agent/sessions/${sessionId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      return {
+        error: `Failed to delete chat session (status ${response.status})`,
+      };
+    }
+
+    return { error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { error: message };
+  }
+}
+
+export function toChatSessionSummary(
+  session: ChatSessionSummaryResponse,
+): ChatSessionSummary {
+  return {
+    id: session.id,
+    title: session.title,
+    documentId: session.document_id,
+    messageCount: session.message_count,
+    preview: session.preview,
+    createdAt: session.created_at,
+    updatedAt: session.updated_at,
+  };
+}
+
+export function toChatMessageRecord(
+  message: ChatMessageRecordResponse,
+): ChatMessageRecord {
+  return {
+    id: message.id,
+    sessionId: message.session_id,
+    role: message.role,
+    content: message.content,
+    citations: message.citations.map(toChatCitation),
+    operationalSources: message.operational_sources.map(toChatOperationalSource),
+    createdAt: message.created_at,
+    insufficientEvidence: message.insufficient_evidence,
+    toolActivities: message.tool_activities.map(toChatToolActivity),
+    directAnswer: message.direct_answer,
+  };
 }
 
 export function formatTimestamp(value: string): string {

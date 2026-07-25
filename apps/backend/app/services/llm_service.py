@@ -36,12 +36,27 @@ class LLMQuotaError(LLMError):
 
 
 @dataclass(frozen=True)
+class AgentFunctionCall:
+    """One function-call request from a Gemini agent turn."""
+
+    name: str
+    args: dict
+
+
+@dataclass(frozen=True)
 class AgentTurnResult:
     """Result from a single Gemini agent turn."""
 
     text: str | None = None
-    function_name: str | None = None
-    function_args: dict | None = None
+    function_calls: tuple[AgentFunctionCall, ...] = ()
+
+    @property
+    def function_name(self) -> str | None:
+        return self.function_calls[0].name if self.function_calls else None
+
+    @property
+    def function_args(self) -> dict | None:
+        return dict(self.function_calls[0].args) if self.function_calls else None
 
 
 @dataclass(frozen=True)
@@ -300,20 +315,24 @@ def _extract_agent_turn(response: object) -> AgentTurnResult:
     parts = getattr(content, "parts", None) or []
 
     text_parts: list[str] = []
+    function_calls: list[AgentFunctionCall] = []
     for part in parts:
         function_call = getattr(part, "function_call", None)
         if function_call is not None:
             name = getattr(function_call, "name", None)
             args = getattr(function_call, "args", None) or {}
             if name:
-                return AgentTurnResult(
-                    function_name=str(name),
-                    function_args=dict(args),
+                function_calls.append(
+                    AgentFunctionCall(name=str(name), args=dict(args))
                 )
+            continue
 
         text = getattr(part, "text", None)
         if text:
             text_parts.append(str(text))
+
+    if function_calls:
+        return AgentTurnResult(function_calls=tuple(function_calls))
 
     if text_parts:
         return AgentTurnResult(text="\n".join(text_parts).strip())

@@ -44,7 +44,36 @@ export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  sessionId?: string | null;
   scopedDocumentId: string | null;
+  citations?: ChatCitation[];
+  operationalSources?: OperationalSourceBundle[];
+  createdAt: string;
+  pending?: boolean;
+  insufficientEvidence?: boolean;
+  toolActivities?: ToolActivity[];
+  directAnswer?: boolean;
+}
+
+export interface ChatSessionSummary {
+  id: string;
+  title: string | null;
+  documentId: string | null;
+  messageCount: number;
+  preview: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatSessionDetail extends ChatSessionSummary {
+  messages: ChatMessageRecord[];
+}
+
+export interface ChatMessageRecord {
+  id: string;
+  sessionId: string;
+  role: "user" | "assistant" | "system";
+  content: string;
   citations?: ChatCitation[];
   operationalSources?: OperationalSourceBundle[];
   createdAt: string;

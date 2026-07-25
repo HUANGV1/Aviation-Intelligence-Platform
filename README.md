@@ -5,6 +5,8 @@ Upload aviation PDFs, chat with an aviation intelligence agent, and get cited an
 ## Features
 
 - **Agent chat** — one interface where the assistant decides whether to answer directly or use tools
+- **Conversation memory** — persistent chat sessions with recall of recent turns for follow-up questions
+- **Chat session management** — new, reopen, continue, and delete chats from a collapsible sidebar
 - **Document search tool** — cited answers from uploaded PDFs with source validation
 - **Live operational tools** — METAR, TAF, and international SIGMETs (AviationWeather.gov)
 - **Document library** — upload PDFs, process them for search, and manage your collection
@@ -111,7 +113,11 @@ uploads/          Local PDF storage (created on first upload)
 | Endpoint | Description |
 |----------|-------------|
 | `GET /health` | Service and database health |
-| `POST /agent/chat` | Unified agent chat with tool routing |
+| `POST /agent/chat` | Unified agent chat with tool routing and session memory |
+| `POST /agent/sessions` | Create a chat session |
+| `GET /agent/sessions` | List saved chat sessions |
+| `GET /agent/sessions/{id}` | Load a chat session and its messages |
+| `DELETE /agent/sessions/{id}` | Delete a chat session and its messages |
 | `POST /documents/upload` | Upload a PDF |
 | `GET /documents` | List documents |
 | `POST /documents/{id}/process` | Extract text, chunk, and embed |
@@ -185,11 +191,11 @@ Implemented now:
 - `document_search` tool
 - Operational tools: `get_metar`, `get_taf`, `get_international_sigmets`
 - Tool activity and live operational source provenance in chat UI
+- Conversation memory with persistent chat sessions
 
 Planned next:
 
 - MCP adapter layer
-- Conversation memory
 - Hybrid retrieval and reranking
 - Observability dashboard
 - Evaluation pipeline

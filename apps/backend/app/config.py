@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     agent_max_tool_rounds: int = 3
     agent_temperature: float = 0.3
     agent_max_output_tokens: int = 2048
+    agent_memory_max_turns: int = 5
 
     aviation_weather_base_url: str = "https://aviationweather.gov"
     operational_cache_ttl_seconds: int = 300

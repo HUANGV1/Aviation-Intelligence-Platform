@@ -9,11 +9,14 @@ import pytest
 
 from app.services import llm_service
 from app.services.llm_service import (
+    AgentFunctionCall,
+    AgentTurnResult,
     LLMError,
     LLMQuotaError,
     LLMRequest,
     PromptCache,
     _build_fingerprint,
+    _extract_agent_turn,
     _extract_json_object,
     _json_generation_config,
     generate_json,
@@ -62,6 +65,44 @@ def test_extract_json_object_rejects_missing_json() -> None:
 def test_extract_json_object_reports_incomplete_json() -> None:
     with pytest.raises(LLMError, match="incomplete"):
         _extract_json_object('{"answer": "cut off before closing"')
+
+
+def test_extract_agent_turn_preserves_multiple_function_calls() -> None:
+    metar_call = MagicMock()
+    metar_call.name = "get_metar"
+    metar_call.args = {"ids": "KJFK"}
+
+    notam_call = MagicMock()
+    notam_call.name = "get_notams"
+    notam_call.args = {"icao": "KJFK"}
+
+    metar_part = MagicMock(function_call=metar_call, text=None)
+    notam_part = MagicMock(function_call=notam_call, text=None)
+    content = MagicMock(parts=[metar_part, notam_part])
+    candidate = MagicMock(content=content)
+    response = MagicMock(candidates=[candidate], text=None)
+
+    turn = _extract_agent_turn(response)
+
+    assert turn.text is None
+    assert turn.function_calls == (
+        AgentFunctionCall(name="get_metar", args={"ids": "KJFK"}),
+        AgentFunctionCall(name="get_notams", args={"icao": "KJFK"}),
+    )
+    assert turn.function_name == "get_metar"
+    assert turn.function_args == {"ids": "KJFK"}
+
+
+def test_extract_agent_turn_returns_text_when_no_function_calls() -> None:
+    text_part = MagicMock(function_call=None, text="Hello from the agent.")
+    content = MagicMock(parts=[text_part])
+    candidate = MagicMock(content=content)
+    response = MagicMock(candidates=[candidate], text=None)
+
+    turn = _extract_agent_turn(response)
+
+    assert turn.function_calls == ()
+    assert turn.text == "Hello from the agent."
 
 
 def test_json_generation_config_requests_json_mime_type() -> None:

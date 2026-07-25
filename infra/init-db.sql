@@ -97,3 +97,41 @@ CREATE TABLE IF NOT EXISTS rag_queries (
 
 CREATE INDEX IF NOT EXISTS idx_rag_queries_created_at ON rag_queries (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_rag_queries_document_id ON rag_queries (document_id);
+
+-- Phase 6: chat_sessions and chat_messages for agent conversation memory
+CREATE TABLE IF NOT EXISTS chat_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT,
+    document_id UUID REFERENCES documents(id) ON DELETE SET NULL,
+    user_id UUID NULL,
+    metadata JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_updated_at ON chat_sessions (updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_created_at ON chat_sessions (created_at DESC);
+
+DROP TRIGGER IF EXISTS chat_sessions_updated_at ON chat_sessions;
+CREATE TRIGGER chat_sessions_updated_at
+    BEFORE UPDATE ON chat_sessions
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+    content TEXT NOT NULL,
+    citations JSONB NOT NULL DEFAULT '[]',
+    operational_sources JSONB NOT NULL DEFAULT '[]',
+    tool_activities JSONB NOT NULL DEFAULT '[]',
+    used_tools TEXT[] NOT NULL DEFAULT '{}',
+    direct_answer BOOLEAN NOT NULL DEFAULT false,
+    insufficient_evidence BOOLEAN NOT NULL DEFAULT false,
+    used_chunk_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id_created_at
+    ON chat_messages (session_id, created_at ASC);

@@ -63,6 +63,12 @@ def main() -> None:
         chunks_exists = connection.execute(
             text("SELECT to_regclass('public.document_chunks') IS NOT NULL")
         ).scalar()
+        chat_sessions_exists = connection.execute(
+            text("SELECT to_regclass('public.chat_sessions') IS NOT NULL")
+        ).scalar()
+        chat_messages_exists = connection.execute(
+            text("SELECT to_regclass('public.chat_messages') IS NOT NULL")
+        ).scalar()
 
     print(
         "migration ok",
@@ -70,6 +76,10 @@ def main() -> None:
         bool(documents_exists),
         "document_chunks table exists:",
         bool(chunks_exists),
+        "chat_sessions table exists:",
+        bool(chat_sessions_exists),
+        "chat_messages table exists:",
+        bool(chat_messages_exists),
     )
 
 

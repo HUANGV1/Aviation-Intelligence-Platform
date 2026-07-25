@@ -10,6 +10,7 @@ from app.schemas.rag import RagCitation
 
 class AgentChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
+    session_id: UUID | None = None
     document_id: UUID | None = None
     top_k: int | None = Field(default=None, ge=1, le=10)
 
@@ -22,6 +23,7 @@ class ToolActivity(BaseModel):
 
 
 class AgentChatResponse(BaseModel):
+    session_id: UUID | None = None
     message: str
     answer: str
     citations: list[RagCitation] = Field(default_factory=list)

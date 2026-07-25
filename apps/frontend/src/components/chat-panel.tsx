@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Radio, Sparkles, X } from "lucide-react";
+import { ArrowUp, MessageSquarePlus, Radio, Sparkles, X } from "lucide-react";
 
 import type { Document } from "@/lib/api";
 import type { ChatMessage } from "@/lib/chat-types";
@@ -20,8 +20,9 @@ interface ChatPanelProps {
   busy: boolean;
   selectedDocument: Document | null;
   processedCount: number;
+  sessionTitle?: string | null;
   onSend: (text: string) => void;
-  onClearConversation: () => void;
+  onNewChat: () => void;
   onRemoveDoc: () => void;
 }
 
@@ -30,8 +31,9 @@ export function ChatPanel({
   busy,
   selectedDocument,
   processedCount,
+  sessionTitle = null,
   onSend,
-  onClearConversation,
+  onNewChat,
   onRemoveDoc,
 }: ChatPanelProps) {
   const [value, setValue] = useState("");
@@ -68,19 +70,18 @@ export function ChatPanel({
               Aviation Intelligence Platform
             </h1>
             <p className="mono-label text-muted-foreground">
-              Agent Console
+              {sessionTitle ? sessionTitle : "Agent Console"}
             </p>
           </div>
         </div>
-        {messages.length > 0 && (
-          <button
-            type="button"
-            onClick={onClearConversation}
-            className="mono-label text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Clear conversation
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onNewChat}
+          className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15"
+        >
+          <MessageSquarePlus className="size-3.5" />
+          New chat
+        </button>
       </header>
 
       <div className="flex min-h-[42px] flex-wrap items-center gap-2 border-b border-border px-4 py-2">
