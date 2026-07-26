@@ -1,0 +1,5 @@
+# Purpose: Python dependencies for the Aviation Intelligence MCP server.
+# Interactions: Installs MCP runtime plus backend deps (httpx, pydantic-settings)
+# via the shared backend requirements file.
+mcp[cli]>=1.2.0
+-r ../backend/requirements.txt
