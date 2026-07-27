@@ -1,6 +1,8 @@
 # Supabase Setup
 
-This project uses **Supabase** for hosted PostgreSQL with the **pgvector** extension. You do not need to install Postgres locally.
+This project uses **Supabase** for hosted PostgreSQL with the **pgvector** extension.
+
+Docker (`docker compose up`) and native runs both use `DATABASE_URL` from `apps/backend/.env`, so app data lands in the same Supabase project. Optional local Postgres is available only with `docker compose --profile local-db`.
 
 ## What you get
 

@@ -37,7 +37,7 @@ type DocumentLibraryProps = {
   uploadError: string | null;
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
-  onUpload: (files: FileList) => void;
+  onUpload: (files: FileList) => Promise<void> | void;
   onDocumentsChange: Dispatch<SetStateAction<Document[]>>;
 };
 
@@ -283,7 +283,10 @@ export function DocumentLibrary({
           onDrop={(e) => {
             e.preventDefault();
             setDragging(false);
-            if (e.dataTransfer.files.length) onUpload(e.dataTransfer.files);
+            if (e.dataTransfer.files.length) {
+              setQuery("");
+              void onUpload(e.dataTransfer.files);
+            }
           }}
           className={cn(
             "group flex w-full flex-col items-center gap-1.5 rounded-md border border-dashed border-border px-4 py-5 text-center transition-colors",
@@ -309,7 +312,10 @@ export function DocumentLibrary({
           multiple
           className="hidden"
           onChange={(e) => {
-            if (e.target.files?.length) onUpload(e.target.files);
+            if (e.target.files?.length) {
+              setQuery("");
+              void onUpload(e.target.files);
+            }
             e.target.value = "";
           }}
         />
@@ -342,7 +348,7 @@ export function DocumentLibrary({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
-        {error ? (
+        {error && documents.length === 0 ? (
           <p className="px-3 py-8 text-center text-sm text-destructive">
             Could not load documents: {error}
           </p>

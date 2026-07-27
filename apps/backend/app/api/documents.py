@@ -48,7 +48,8 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentResponse:
         return create_document(
             filename=stored_filename,
             original_filename=original_filename,
-            file_path=str(destination),
+            # Store filename only so Docker (/data/uploads) and native (./uploads) both resolve.
+            file_path=stored_filename,
         )
     except RuntimeError as exc:
         destination.unlink(missing_ok=True)

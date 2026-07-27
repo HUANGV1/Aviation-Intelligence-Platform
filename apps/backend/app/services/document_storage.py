@@ -110,13 +110,26 @@ async def save_pdf_upload(file: UploadFile) -> tuple[str, str, Path]:
     return stored_filename, file.filename, destination
 
 
-def resolve_document_path(file_path: str) -> Path:
-    """Resolve and validate a stored PDF path is inside the upload directory."""
+def _candidate_under_upload_dir(file_path: str) -> Path:
+    """Map a stored path to the current upload dir (handles legacy absolute paths)."""
     candidate = Path(file_path)
+    upload_root = settings.upload_path.resolve()
+
     if not candidate.is_absolute():
-        candidate = settings.upload_path / candidate
+        return (settings.upload_path / candidate).resolve()
 
     resolved = candidate.resolve()
+    try:
+        resolved.relative_to(upload_root)
+        return resolved
+    except ValueError:
+        # Legacy rows may store a host absolute path from a different environment.
+        return (settings.upload_path / candidate.name).resolve()
+
+
+def resolve_document_path(file_path: str) -> Path:
+    """Resolve and validate a stored PDF path is inside the upload directory."""
+    resolved = _candidate_under_upload_dir(file_path)
     upload_root = settings.upload_path.resolve()
 
     try:
@@ -138,11 +151,7 @@ def resolve_document_path(file_path: str) -> Path:
 
 def delete_local_pdf(file_path: str) -> None:
     """Delete a PDF from disk; missing files are ignored."""
-    candidate = Path(file_path)
-    if not candidate.is_absolute():
-        candidate = settings.upload_path / candidate
-
-    resolved = candidate.resolve()
+    resolved = _candidate_under_upload_dir(file_path)
     upload_root = settings.upload_path.resolve()
 
     try:

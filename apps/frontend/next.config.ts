@@ -5,6 +5,9 @@
  */
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  // Required for the slim production image in apps/frontend/Dockerfile
+  output: "standalone",
+};
 
 export default nextConfig;

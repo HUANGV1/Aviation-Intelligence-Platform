@@ -1,0 +1,68 @@
+# Backend + frontend against your Supabase DB (DATABASE_URL in apps/backend/.env).
+#
+#   docker compose up --build
+#
+# Optional local Postgres instead of Supabase:
+#   docker compose --profile local-db up --build
+#   (also set DATABASE_URL=postgresql://postgres:postgres@db:5432/aviation)
+#
+# App:  http://localhost:3000
+# API:  http://localhost:8000/docs
+
+services:
+  db:
+    profiles: ["local-db"]
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aviation
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aviation"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: apps/backend/.env
+        required: true
+    environment:
+      # Keep container networking / storage paths; DATABASE_URL comes from .env (Supabase).
+      CORS_ORIGINS: http://localhost:3000
+      UPLOAD_DIR: /data/uploads
+      LLM_CACHE_PATH: /data/cache/llm_cache.json
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 8000
+    volumes:
+      # Share host ./uploads with the container so native + Docker see the same PDFs.
+      - ./uploads:/data/uploads
+      - cache_data:/data/cache
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      API_INTERNAL_URL: http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  cache_data:

@@ -14,6 +14,7 @@ import type { Document, HealthResponse } from "@/lib/api";
 import {
   deleteChatSession,
   fetchChatSession,
+  fetchDocuments,
   fetchChatSessions,
   resolveDocumentScope,
   sendAgentMessage,
@@ -78,6 +79,7 @@ export function Workspace({
   const [busy, setBusy] = useState(false);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsError, setSessionsError] = useState<string | null>(null);
+  const [documentLoadError, setDocumentLoadError] = useState(documentsError);
   const [sessionLoadError, setSessionLoadError] = useState<string | null>(null);
   const [chatSidebarOpen, setChatSidebarOpen] = useState(true);
   const [docSidebarOpen, setDocSidebarOpen] = useState(true);
@@ -117,6 +119,9 @@ export function Workspace({
 
   useEffect(() => {
     setDocuments(initialDocuments);
+    if (initialDocuments.length > 0) {
+      setDocumentLoadError(null);
+    }
   }, [initialDocuments]);
 
   useEffect(() => {
@@ -163,16 +168,35 @@ export function Workspace({
         f.name.toLowerCase().endsWith(".pdf"),
     );
 
+    if (list.length === 0) {
+      setUploadError("Only PDF files are allowed.");
+      return;
+    }
+
+    let uploaded = false;
+
     for (const file of list) {
       const { data, error } = await uploadDocument(file);
       if (error || !data) {
         setUploadError(error ?? "Upload failed.");
         continue;
       }
+      uploaded = true;
       setDocuments((prev) => [
         data,
         ...prev.filter((item) => item.id !== data.id),
       ]);
+    }
+
+    if (uploaded) {
+      const { data, error } = await fetchDocuments();
+      if (data) {
+        setDocuments(data.documents);
+        setDocumentLoadError(null);
+      } else if (error) {
+        setUploadError(error);
+        setDocumentLoadError(error);
+      }
     }
   }
 
@@ -432,7 +456,7 @@ export function Workspace({
           >
             <DocumentLibrary
               documents={documents}
-              error={documentsError}
+              error={documentLoadError}
               uploadError={uploadError}
               collapsed={!docSidebarOpen}
               onToggleCollapsed={() => setDocSidebarOpen((prev) => !prev)}
@@ -513,7 +537,7 @@ export function Workspace({
             <div className="min-h-0 flex-1">
               <DocumentLibrary
                 documents={documents}
-                error={documentsError}
+                error={documentLoadError}
                 uploadError={uploadError}
                 onUpload={handleUpload}
                 onDocumentsChange={setDocuments}

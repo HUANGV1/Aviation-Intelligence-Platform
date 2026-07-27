@@ -109,8 +109,10 @@ apps/
     app/services/           Agent, RAG, embeddings, PDF pipeline, ops clients
     app/tools/              Typed agent tools + registry
     tests/                  Pytest suite
+  mcp_server/               Local MCP adapter for Cursor (stdio; not in Compose)
 docs/                       Product overview, agent architecture, Supabase setup
 infra/init-db.sql           Schema: documents, chunks, embeddings, chat
+docker-compose.yml          Local Postgres + backend + frontend
 sample-data/                Small PDFs for local testing
 ```
 
@@ -119,14 +121,15 @@ sample-data/                Small PDFs for local testing
 ## Prerequisites
 
 - Git
-- Node.js 22+
-- Python 3.12+
-- A [Supabase](https://supabase.com) project (free tier is enough)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (recommended one-command path), **or** Node.js 22+ and Python 3.12+ for a native run
 - A [Google Gemini](https://ai.google.dev/) API key
+- Database: a [Supabase](https://supabase.com) project (Docker uses the same `DATABASE_URL`; optional local Postgres via Compose profile)
 
 ---
 
-## Quick start
+## Quick start (Docker)
+
+Runs the FastAPI backend and Next.js UI in containers. **Database is your Supabase project** via `DATABASE_URL` in `apps/backend/.env` (same as a native run).
 
 ### 1. Clone
 
@@ -134,6 +137,57 @@ sample-data/                Small PDFs for local testing
 git clone https://github.com/HUANGV1/Aviation-Intelligence-Platform.git
 cd Aviation-Intelligence-Platform
 ```
+
+### 2. Backend env (Supabase + Gemini)
+
+```powershell
+# Windows PowerShell
+Copy-Item apps/backend/.env.example apps/backend/.env
+```
+
+```bash
+# macOS / Linux / Git Bash
+cp apps/backend/.env.example apps/backend/.env
+```
+
+In `apps/backend/.env` set at least:
+
+| Variable | Notes |
+|----------|--------|
+| `DATABASE_URL` | Supabase **Session pooler** URI (see [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md)) |
+| `GEMINI_API_KEY` | Google AI Studio / Gemini API key |
+
+Schema must already be applied in Supabase (`infra/init-db.sql`).
+
+### 3. Start the stack
+
+Make sure Docker Desktop is running, then:
+
+```bash
+docker compose up --build
+```
+
+| Service | URL |
+|---------|-----|
+| App | http://localhost:3000 |
+| API health | http://localhost:8000/health |
+| OpenAPI docs | http://localhost:8000/docs |
+
+Chat sessions, documents metadata, and embeddings go to **Supabase**. PDF files are stored on the host in `uploads/` (bind-mounted into the backend container).
+
+Optional local Postgres (no Supabase): set `DATABASE_URL=postgresql://postgres:postgres@db:5432/aviation` and run `docker compose --profile local-db up --build`.
+
+Stop with `Ctrl+C`, or run detached with `docker compose up --build -d` and stop with `docker compose down`.
+
+**Try it:** upload a PDF in the document library → **Process** → ask a question in chat (optionally drag/attach the document to scope retrieval). Or ask for a METAR/TAF without uploading anything.
+
+---
+
+## Quick start (native, without Docker)
+
+### 1. Clone
+
+Same as above.
 
 ### 2. Configure Supabase
 
@@ -206,13 +260,7 @@ npm run dev
 
 ### 6. Open the app
 
-| Service | URL |
-|---------|-----|
-| App | http://localhost:3000 |
-| API health | http://localhost:8000/health |
-| OpenAPI docs | http://localhost:8000/docs |
-
-**Try it:** upload a PDF in the document library → **Process** → ask a question in chat (optionally drag/attach the document to scope retrieval). Or ask for a METAR/TAF without uploading anything.
+Same URLs as the Docker table above.
 
 ---
 
